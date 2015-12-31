@@ -3,10 +3,21 @@
 		<link href="css/main.css" rel="stylesheet" type="text/css" />
 	</head>
 	<body onload="start()">
+		<div>
 		<script src="js/raytracer.js"></script>
 		<H1>Pete and Matt's Raytracer</H1>
+		<button onclick="startWorker()">RayTrace</button>
+		<br /><br />
 		<canvas id="glcanvas" width="640" height="480">
 			Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
 		</canvas>
+		<br />
+		<textarea id="output" disabled="true" columns="500" rows="5">
+		</textarea>
+		<br />
+			<div class="round-button"><div class="round-button-circle"><a class="round-button">Sphere</a></div></div>
+			<div class="round-button"><div class="round-button-circle"><a class="round-button">Cube</a></div></div>
+			<div class="round-button"><div class="round-button-circle"><a class="round-button">Pyramid</a></div></div>
+		</div>
 	</body>
 </html>
