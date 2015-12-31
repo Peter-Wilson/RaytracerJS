@@ -18,14 +18,14 @@ function RayTrace(i,j)
 	var PixelColor = GetColor(i,j);
 	
 	//row completed
-	if(j > width){
+	if(j > w){
 		j = 0;
 		i++;
 	}else
 		j++;
 	
 	//image processed
-	if(i > height) return;
+	if(i > h) return;
 	
 	setTimeout("RayTrace("+i+","+j+")",5);
 	
@@ -35,7 +35,7 @@ function GetColor(i, j)
 {
 	var ray;
 	var rD = calculateDirection(i,j);
-	postmessage("output:"+"\nValue = "+rD[0]);
+	postMessage("output:"+"\nValue = "+rD[0]);
 	
 }
 
