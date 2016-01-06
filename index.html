@@ -8,9 +8,16 @@
 		<H1>Pete and Matt's Raytracer</H1>
 		<button onclick="startWorker()">RayTrace</button>
 		<br /><br />
-		<canvas id="glcanvas" width="640" height="480">
-			Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
-		</canvas>
+		<div style="position:relative;" height="480" width="640">
+			<canvas id="glcanvas" width="640" height="480"
+					style="position:absolute;left:0;top:0;z-index:0;">
+				Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
+			</canvas>
+			<canvas id="canvas2d" width="640" height="480" 
+					style="position:absolute;left:0;top:0;z-index:1;">
+				Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
+			</canvas>
+		</div>
 		<br />
 		<textarea id="output" disabled="true" columns="500" rows="5">
 		</textarea>
