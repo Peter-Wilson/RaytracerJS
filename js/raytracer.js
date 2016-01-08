@@ -3,7 +3,7 @@ var objects;
 var w;
 var output;
 var context;
-var pixelWidth = 4;
+var pixelWidth = 2;
 
 function start() {
   var glcanvas = document.getElementById("glcanvas");
@@ -27,7 +27,7 @@ function start() {
   }
 }
 
-function Shape(type, location, radius, ambient, diffuse, specular, color, reflective, refractive) {
+function Shape(type, location, radius, ambient, diffuse, specular, color, reflective, refractive, reflectivity) {
 	this.type = type;
 	this.location = location;
 	this.radius = radius;
@@ -37,6 +37,7 @@ function Shape(type, location, radius, ambient, diffuse, specular, color, reflec
 	this.color = color;
 	this.reflective = reflective;
 	this.refractive = refractive;
+	this.reflectivity = reflectivity; //lower number means more reflective
 }
 
 function initWebGL(canvas) {
@@ -47,24 +48,25 @@ function initWebGL(canvas) {
     // Try to grab the standard context. If it fails, fallback to experimental.
     gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 	//initialize the default objects
-	var sphere = new Shape("SPHERE",[250,250,10],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],1,0);
-	var sphere2 = new Shape("SPHERE",[100,100,100],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,0);
-	var sphere3 = new Shape("SPHERE",[450,450,900],20,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,0);
+	var sphere = new Shape("SPHERE",[250,250,100],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],1,0, 1);
+	var sphere2 = new Shape("SPHERE",[400,100,500],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,0, 1);
+	var sphere3 = new Shape("SPHERE",[450,450,900],20,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,0, 1);
 	var plane = new Shape;
 	plane.plane = [-1,0,0,455];
 	plane.diffuse = [0.8,0.8,0.8];
 	plane.specular = [1,1,1];
-	plane.ambient = [0.2,0.2,0.2];
+	plane.ambient = [0.3,0.3,0.3];
 	plane.color = [255,1,1];
 	plane.reflective = 1;
 	plane.refractive = 0;
+	plane.reflectivity = 1;
 	plane.type = "PLANE";
 	
 	
 	var triangle = new Shape;
 	triangle.point1 = [0,0,0];
 	triangle.point2 = [200,10,55];
-	triangle.point3 = [300,200,0];
+	triangle.point3 = [300,200,200];
 	triangle.type = "POLYGON";
 	triangle.diffuse = [0.8,0.8,0.8];
 	triangle.specular = [1,1,1];
@@ -72,6 +74,7 @@ function initWebGL(canvas) {
 	triangle.color = [1,1,255];
 	triangle.reflective = 1;
 	triangle.refractive = 0;
+	triangle.reflectivity = 1;
 	triangle.plane = generatePlane(triangle.point1,triangle.point2,triangle.point3);
 	
 	

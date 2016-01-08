@@ -2,10 +2,11 @@ var height;
 var width;
 var r0;
 var objects;
-var defaultColor = [255,255,255];
+var defaultColor = [0,0,0];
 var pixelWidth;
 var pixelCenter;
-var light;
+var light = new Object();
+light.location = [0,0,0];	
 var ambientI = 3;
 var lightI = 0.8;
 var specularF = 5;
@@ -29,7 +30,7 @@ function RayTrace()
 	postMessage("done");
 }
 
-function GetColor(vectorStart, vectorSlope, recursion)
+function GetColor(vectorStart, vectorSlope, recursion, object)
 {	
 	var intersection = -1;
 	var point;
@@ -39,10 +40,10 @@ function GetColor(vectorStart, vectorSlope, recursion)
 	var color = defaultColor; 
 	var reflection;
 	
-	if(recursion >= maxRecursions) return color;
-	
 	for(var index = 0; index < objects.length; index++)
 	{
+		if (object && object === objects[index]) continue;
+		
 		if(objects[index].type === "SPHERE")
 		{
 			var B = CalculateB(vectorStart, vectorSlope, objects[index].location);
@@ -53,11 +54,11 @@ function GetColor(vectorStart, vectorSlope, recursion)
 			{
 				var t = (-B - Math.sqrt(temp))/2;
 				if(t <= 0)	t = (-B + Math.sqrt(temp))/2;
-				if(t <= 0) return defaultColor;
+				if(t <= 0) continue;
 				
 				var distance = Distance(vectorStart, vectorSlope, t);
 				
-				if(!minDistance || distance < minDistance)
+				if((!minDistance || distance < minDistance))
 				{
 					minDistance = distance;
 					obj = objects[index];
@@ -88,7 +89,7 @@ function GetColor(vectorStart, vectorSlope, recursion)
 				
 				var distance = Distance(vectorStart, vectorSlope, t);
 				
-				if(!minDistance || distance < minDistance)
+				if((!minDistance || distance < minDistance))
 				{
 					minDistance = distance;
 					obj = objects[index];
@@ -138,10 +139,37 @@ function GetColor(vectorStart, vectorSlope, recursion)
 		}
 	}	
 	
-	//if(obj && obj.reflective)
-	//	color += (GetColor(point, reflection, recursion+1));
+	//set the reflective colour
+	if(obj && obj.reflective && recursion+1 <= maxRecursions)
+	{
+		//postMessage("reflection z: "+reflection[2]);
+		recursedColor = (GetColor(point, reflection, recursion+1, obj));
+		color = [	Math.round((obj.reflectivity*color[0] + recursedColor[0]) /(1+obj.reflectivity)),
+					Math.round((obj.reflectivity*color[1] + recursedColor[1]) /(1+obj.reflectivity)),
+					Math.round((obj.reflectivity*color[2] + recursedColor[2]) /(1+obj.reflectivity))	];
+					
+	}
+	
+	//set the refractive color
+	if(obj && obj.refractive && recursion+1 <= maxRecursions)
+	{
+		//postMessage("reflection z: "+reflection[2]);
+		var refraction = CalculateRefraction(vectorSlope, point, normal);
+		recursedColor = (GetColor(point, refraction, recursion+1, obj));
+		color = [	Math.round((obj.reflectivity*color[0] + recursedColor[0]) /(1+obj.reflectivity)),
+					Math.round((obj.reflectivity*color[1] + recursedColor[1]) /(1+obj.reflectivity)),
+					Math.round((obj.reflectivity*color[2] + recursedColor[2]) /(1+obj.reflectivity))	];
+					
+	}
 	
 	return color;
+}
+
+function sameObject(a, b)
+{
+	if(a && b)
+		return (a.location[0] == b.location[0] && a.location[1] == b.location[1] && a.location[2] == b.location[2])
+	return false;
 }
 
 function calculateColor(object, normal, hitpoint, reflection)
@@ -223,9 +251,18 @@ function CalculateB(start, slope, sphere)
 function CalculateReflection(vector, hitpoint, normal)
 {
 	var value = dot(vector, normal);
-	return [strip(vector[0] - 2*(value)*normal[0]),
-			strip(vector[1] - 2*(value)*normal[1]),
-			strip(vector[2] - 2*(value)*normal[2])];
+	return [vector[0] - 2*(value)*normal[0],
+			vector[1] - 2*(value)*normal[1],
+			vector[2] - 2*(value)*normal[2]];
+}
+
+//return the direction vector of the reflection
+function CalculateRefraction(vector, hitpoint, normal)
+{
+	var value = dot(vector, normal);
+	return [vector[0] - 2*(value)*normal[0],
+			vector[1] - 2*(value)*normal[1],
+			vector[2] - 2*(value)*normal[2]];
 }
 
 function CalculateC(start, sphere, radius)
@@ -256,8 +293,5 @@ onmessage = function(e)
 	pixelWidth = e.data[3];
 	pixelCenter = pixelWidth/2;
 	postMessage("\nObjects:"+objects+"\nHeight:"+height+"\nWidth:"+width);
-	light = new Object();
-	light.location = [0,640,-100];
-	light.directionVector = [1/Math.sqrt(3),-1/Math.sqrt(3),3/Math.sqrt(3)];	
 	RayTrace();
 }
