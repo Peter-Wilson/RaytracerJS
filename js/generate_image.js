@@ -10,7 +10,11 @@ light.location = [0,0,0];
 var ambientI = 3;
 var lightI = 0.8;
 var specularF = 5;
+var aLUT
+var LUTBuf; 
 var maxRecursions = 2;
+var TIRflag = -999.0;
+var scalefac = 16384;
 
 //iterate through each pixel to get the raytraced colour
 function RayTrace()
@@ -29,6 +33,7 @@ function RayTrace()
 	
 	postMessage("done");
 }
+
 
 function GetColor(vectorStart, vectorSlope, recursion, object)
 {	
@@ -66,7 +71,7 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 					normal = [(point[0]-objects[index].location[0])/objects[index].radius,
 								(point[1]-objects[index].location[1])/objects[index].radius,
 								(point[2]-objects[index].location[2])/objects[index].radius];
-					reflection = CalculateReflection(vectorSlope, point, normal);
+					reflection = CalculateReflection(vectorSlope, normal);
 					color = calculateColor(objects[index], normal, point, reflection);
 				}				
 			}
@@ -98,7 +103,7 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 								objects[index].plane[1],
 								objects[index].plane[2]];
 								
-					reflection = CalculateReflection(vectorSlope, point, normal);	
+					reflection = CalculateReflection(vectorSlope, normal);	
 					color = calculateColor(objects[index], normal, point, reflection);
 				}	
 			}
@@ -132,7 +137,7 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 								objects[index].plane[1],
 								objects[index].plane[2]];
 					
-					reflection = CalculateReflection(vectorSlope, point, normal);			
+					reflection = CalculateReflection(vectorSlope, normal);			
 					color = calculateColor(objects[index], normal, point, reflection);
 				}	
 			}			
@@ -142,7 +147,6 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 	//set the reflective colour
 	if(obj && obj.reflective && recursion+1 <= maxRecursions)
 	{
-		//postMessage("reflection z: "+reflection[2]);
 		recursedColor = (GetColor(point, reflection, recursion+1, obj));
 		color = [	Math.round((obj.reflectivity*color[0] + recursedColor[0]) /(1+obj.reflectivity)),
 					Math.round((obj.reflectivity*color[1] + recursedColor[1]) /(1+obj.reflectivity)),
@@ -153,12 +157,11 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 	//set the refractive color
 	if(obj && obj.refractive && recursion+1 <= maxRecursions)
 	{
-		//postMessage("reflection z: "+reflection[2]);
-		var refraction = CalculateRefraction(vectorSlope, point, normal);
-		recursedColor = (GetColor(point, refraction, recursion+1, obj));
-		color = [	Math.round((obj.reflectivity*color[0] + recursedColor[0]) /(1+obj.reflectivity)),
-					Math.round((obj.reflectivity*color[1] + recursedColor[1]) /(1+obj.reflectivity)),
-					Math.round((obj.reflectivity*color[2] + recursedColor[2]) /(1+obj.reflectivity))	];
+		var refraction = CalculateRefraction(vectorSlope, normal, (object)?object.refractiveVal:1, (obj.refractiveVal)?obj.refractiveVal:1);
+		refractedColor = (GetColor(point, refraction, recursion+1, obj));
+		color = [	Math.round((color[0] + 3*refractedColor[0]) /(4)),
+					Math.round((color[1] + 3*refractedColor[1]) /(4)),
+					Math.round((color[2] + 3*refractedColor[2]) /(4))	];
 					
 	}
 	
@@ -248,21 +251,46 @@ function CalculateB(start, slope, sphere)
 }
 
 //return the direction vector of the reflection
-function CalculateReflection(vector, hitpoint, normal)
+function CalculateReflection(vector, normal)
 {
-	var value = dot(vector, normal);
+	var value = dot(vector, normal);	
 	return [vector[0] - 2*(value)*normal[0],
 			vector[1] - 2*(value)*normal[1],
 			vector[2] - 2*(value)*normal[2]];
 }
 
 //return the direction vector of the reflection
-function CalculateRefraction(vector, hitpoint, normal)
+function CalculateRefraction(vector, normal, startk, endk)
 {
 	var value = dot(vector, normal);
-	return [vector[0] - 2*(value)*normal[0],
-			vector[1] - 2*(value)*normal[1],
-			vector[2] - 2*(value)*normal[2]];
+	var beta;
+	var alpha;
+	var r = startk/endk;
+	var D;
+	
+    if (value>=0) { 
+		beta=r; 
+	} else {
+		beta=1/r;
+	}
+	
+    D = 1 + Math.pow(beta,2)*(Math.pow(value,2) - 1);
+
+    if (D>=0) {
+        if (value >= 0)
+            alpha = beta * value - Math.sqrt(D); 
+        else
+			alpha = beta * value + Math.sqrt(D); 
+        return[ alpha*normal[0] - beta*vector[0],
+				alpha*normal[1] - beta*vector[1],
+				alpha*normal[2] - beta*vector[2]];
+    } else {
+        value = 2 * value;       
+		return [ value * normal[0] - vector[0],
+				value * normal[1] - vector[1],
+				value * normal[2] - vector[2]];		
+    }
+	
 }
 
 function CalculateC(start, sphere, radius)

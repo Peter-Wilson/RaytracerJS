@@ -27,7 +27,7 @@ function start() {
   }
 }
 
-function Shape(type, location, radius, ambient, diffuse, specular, color, reflective, refractive, reflectivity) {
+function Shape(type, location, radius, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
 	this.type = type;
 	this.location = location;
 	this.radius = radius;
@@ -38,6 +38,7 @@ function Shape(type, location, radius, ambient, diffuse, specular, color, reflec
 	this.reflective = reflective;
 	this.refractive = refractive;
 	this.reflectivity = reflectivity; //lower number means more reflective
+	this.refractiveVal = refractiveVal;
 }
 
 function initWebGL(canvas) {
@@ -48,9 +49,9 @@ function initWebGL(canvas) {
     // Try to grab the standard context. If it fails, fallback to experimental.
     gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 	//initialize the default objects
-	var sphere = new Shape("SPHERE",[250,250,100],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],1,0, 1);
-	var sphere2 = new Shape("SPHERE",[400,100,500],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,0, 1);
-	var sphere3 = new Shape("SPHERE",[450,450,900],20,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,0, 1);
+	var sphere = new Shape("SPHERE",[250,250,100],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],0,0, 1,2.4);
+	var sphere2 = new Shape("SPHERE",[400,100,500],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,1, 0, 0);
+	var sphere3 = new Shape("SPHERE",[450,450,900],20,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,1, 0,0);
 	var plane = new Shape;
 	plane.plane = [-1,0,0,455];
 	plane.diffuse = [0.8,0.8,0.8];
