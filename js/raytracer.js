@@ -5,7 +5,7 @@ var output;
 var context;
 var pixelWidth = 1;
 var light = new Object();
-light.location = [0,0,0];	
+light.location = [-300,-300,-300];	
 light.ambientI = 3;
 light.lightI = 0.8;
 light.specularF = 5;
@@ -24,6 +24,7 @@ var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2(),
 offset = new THREE.Vector3(),
 INTERSECTED, SELECTED;
+var screenCamera;
 
 function start() {
   glcanvas = document.getElementById("glcanvas");
@@ -66,10 +67,12 @@ function Shape(type, location, radius, ambient, diffuse, specular, color, reflec
 	this.refractiveVal = refractiveVal;
 }
 
-function Square(location, radius, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
-	this.type = "SPHERE";
-	this.location = location;
-	this.radius = radius;
+function Square(p1,p2,p3,p4, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
+	this.type = "POLYGON";
+	this.point1 = p1;
+	this.point2 = p2;
+	this.point3 = p3;
+	this.point4 = p4;
 	this.diffuse = diffuse;
 	this.specular = specular;
 	this.ambient = ambient;
@@ -78,13 +81,15 @@ function Square(location, radius, ambient, diffuse, specular, color, reflective,
 	this.refractive = refractive;
 	this.reflectivity = reflectivity; //lower number means more reflective
 	this.refractiveVal = refractiveVal;
+	this.plane = generatePlane(this.point1,this.point2,this.point3);
 }
 
 
-function Pyramid(location, radius, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
-	this.type = "SPHERE";
-	this.location = location;
-	this.radius = radius;
+function Polygon(p1,p2,p3, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
+	this.type = "POLYGON";
+	this.point1 = p1;
+	this.point2 = p2;
+	this.point3 = p3;
 	this.diffuse = diffuse;
 	this.specular = specular;
 	this.ambient = ambient;
@@ -93,6 +98,7 @@ function Pyramid(location, radius, ambient, diffuse, specular, color, reflective
 	this.refractive = refractive;
 	this.reflectivity = reflectivity; //lower number means more reflective
 	this.refractiveVal = refractiveVal;
+	this.plane = generatePlane(this.point1,this.point2,this.point3);
 }
 
 function initWebGL(canvas) {
@@ -103,7 +109,7 @@ function initWebGL(canvas) {
     // Try to grab the standard context. If it fails, fallback to experimental.
     gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 	//initialize the default objects
-	/*var sphere = new Shape("SPHERE",[250,250,100],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],0,0, 1,2.4);
+	var sphere = new Shape("SPHERE",[0,0,0],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],0,0, 0,0);
 	var sphere2 = new Shape("SPHERE",[400,100,500],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,1, 0, 0);
 	var sphere3 = new Shape("SPHERE",[450,450,900],20,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,1, 0,0);
 	var plane = new Shape;
@@ -138,7 +144,7 @@ function initWebGL(canvas) {
 	objects.push(sphere2);
 	objects.push(sphere3);
 	objects.push(plane);
-	objects.push(triangle);*/
+	objects.push(triangle);
   }
   catch(e) {}
   
@@ -184,19 +190,30 @@ function startFunction()
 
 function createObjectList(objects)
 {
+	var plane2 = new Shape;
+	plane2.plane = [-1,0,0,100];
+	plane2.diffuse = [0.8,0.8,0.8];
+	plane2.specular = [1,1,1];
+	plane2.ambient = [0.3,0.3,0.3];
+	plane2.color = [255,1,1];
+	plane2.reflective = 1;
+	plane2.refractive = 0;
+	plane2.reflectivity = 1;
+	plane2.type = "PLANE";
+	objects.push(plane2);
+				
 	for(var i = 0; i < shapes.length; i++)
 	{
 		if(shapes[i].type === "SPHERE")
 		{
 			var a = shapes[i];
-			var sphere = new Shape("SPHERE",[(height/2) + a.position.y,(width/2) + a.position.x,a.position.z],
-			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,0,0, 0,0);
+			var sphere = new Shape("SPHERE",[ -a.position.y,a.position.x,a.position.z],
+			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,1,2, 0,0);
 			objects.push(sphere);
 		}
 		if(shapes[i].type === "PLANE")
 		{
-			alert("plane");
-			var a = shapes[i]
+			var a = shapes[i];
 			var plane = new Shape;
 			plane.plane = [-1,0,,0,-i.y];
 			plane.diffuse = [0.8,0.8,0.8];
@@ -209,18 +226,87 @@ function createObjectList(objects)
 			plane.type = "PLANE";
 			objects.push(plane);
 		}
+		if(shapes[i].type === "SQUARE")		{
+			createSquarePolygons(shapes[i].position, shapes[i].width, shapes[i].color, objects);			
+		}		
+		if(shapes[i].type === "PYRAMID"){			
+			createPyramidPolygons(shapes[i].position, shapes[i].height, shapes[i].width, shapes[i].color, objects);
+		}
 	}
 	
 }
+
+//add the polygons required to make a cube
+function createSquarePolygons(p,w,color,obj)
+{
+	
+	var sideA = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],
+							[-((p.y)-(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideB = new Square([-((p.y)-(w/2)),(p.x-(w/2)),(p.z-(w/2))],[-((p.y)-(w/2)),(p.x-(w/2)),(p.z+(w/2))],
+							[-((p.y)-(w/2)),(p.x+(w/2)), (p.z+(w/2))],[-((p.y)-(w/2)),(p.x+(w/2)),(p.z-(w/2))],
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideC = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],
+							[-((p.y)-(w/2)),(p.x-(w/2)),(p.z-(w/2))],[-((p.y)-(w/2)),(p.x+(w/2)),(p.z-(w/2))],
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideD = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],
+							[-((p.y)+(w/2)),(p.x-(w/2)),(p.z+(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],
+							[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideE = new Square([-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z+(w/2))],
+						[-((p.y)-(w/2)),(p.x-(w/2)),(p.z+(w/2))],[-((p.y)-(w/2)),(p.x-(w/2)),(p.z-(w/2))],
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideF = new Square([-((p.y)+(w/2)),(p.x-(w/2)),(p.z+(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],
+						[-((p.y)-(w/2)),(p.x+(w/2)),(p.z+(w/2))],[-((p.y)-(w/2)),(p.x-(w/2)),(p.z+(w/2))],
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	obj.push(sideA);
+	obj.push(sideB);
+	obj.push(sideC);
+	obj.push(sideD);
+	obj.push(sideE);
+	obj.push(sideF);
+}
+
+//add the polygons required to make a cube
+function createPyramidPolygons(p,h,w,color,obj)
+{
+	
+	var distance = Math.sqrt(Math.pow(w,2) + Math.pow(w,2));
+	
+	alert("x: "+p.x+" , y:"+p.y+", z: "+p.z + ", distance:"+distance);
+	var a = [-p.y+(h/2),p.x,p.z];
+	var b = [-p.y+(h/2),p.x+distance,p.z];
+	var c = [-p.y+(h/2),p.x,p.z];
+	var d = [-p.y+(h/2),p.x-distance,p.z];
+	var top = [-p.y-(h/2),p.x,p.z];
+	
+	var sideA = new Square(a,b,c,d,
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideB = new Polygon(top,a,b,[0.5,0.5,0.5],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideC = new Polygon(top,b,c,[0.5,0.5,0.5],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideD = new Polygon(top,c,d,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	var sideE = new Polygon(top,d,a,[0.5,0.5,0.5],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
+	obj.push(sideA);
+	obj.push(sideB);
+	obj.push(sideC);
+	obj.push(sideD);
+	obj.push(sideE);
+}
+
 
 function startWorker() {
 	if(typeof(Worker) !== "undefined") {
 		if(typeof(w) == "undefined") {
 			w = new Worker("js/generate_image.js");
 			w.postMessage = w.webkitPostMessage || w.postMessage;
+			objects = [];
 			createObjectList(objects);
+			screenCamera = new Object();
+			screenCamera.position = camera.position;
+			screenCamera.direction = camera.getWorldDirection();
+			screenCamera.corners = topCorners(screenCamera.position, camera, glcanvas);
+			screenCamera.plane = 
 			w.postMessage([JSON.stringify(objects),height,width,pixelWidth, JSON.stringify(light), 
-							maxRecursions, defaultColor]);
+							maxRecursions, defaultColor, JSON.stringify(screenCamera)]);
 		}
 		w.onmessage = function(event) {
 			if(event.data.startsWith("ROW:")){
@@ -258,12 +344,17 @@ function stopWorker() {
 function addSquare()
 {
 	var geometry = new THREE.BoxGeometry( 40, 40, 40 );
-	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+	var tempColor = [Math.random()*256, Math.random()*256,Math.random()*256];
+	
+	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: rgb2hex(tempColor[0],tempColor[1],tempColor[2])  } ) );
 
 	object.position.x = 0;
 	object.position.y = 0;
 	object.position.z = 0;
 
+	object.type = "SQUARE";
+	object.width = 80;
+	object.color = tempColor;
 	object.scale.x = 2
 	object.scale.y = 2;
 	object.scale.z = 2;
@@ -311,11 +402,18 @@ function rgb2hex(red, green, blue) {
 function addPyramid()
 {
 	var geometry = new THREE.CylinderGeometry( 1, 50, 80, 4 );
-	var cylinder = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff }  ));
+	var tempColor = [Math.random()*256, Math.random()*256,Math.random()*256];
+	var cylinder = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: rgb2hex(tempColor[0],tempColor[1],tempColor[2])}  ));
 		
 	cylinder.position.x = 0;
 	cylinder.position.y = 0;
 	cylinder.position.z = 0;	
+	
+	cylinder.type = "PYRAMID";
+	cylinder.width = 50;
+	cylinder.height = 80;
+	cylinder.color = tempColor;
+		
 		
 	cylinder.castShadow = true;
 	cylinder.receiveShadow = true;
@@ -325,20 +423,31 @@ function addPyramid()
 	
 }
 
+function topCorners(position, camera, canvas)
+{
+	var pos = position.clone();
+    projScreenMat = new THREE.Matrix4();
+    projScreenMat.multiplyMatrices( camera.projectionMatrix, camera.matrix);
+    projScreenMat.multiplyVector3(pos);
+    return { x: (pos.x+1)*width/2, 
+             y:(-pos.y+1)*height/2}; 
+ 
+}
+
 			
 
 			function init() {
 				camera = new THREE.PerspectiveCamera( 70, width / height, 1, 10000 );
 				camera.position.z = 500;
 
-				controls = new THREE.TrackballControls( camera );
+				/*controls = new THREE.TrackballControls( camera );
 				controls.rotateSpeed = 1.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
 				controls.noZoom = false;
 				controls.noPan = false;
 				controls.staticMoving = true;
-				controls.dynamicDampingFactor = 0.3;
+				controls.dynamicDampingFactor = 0.3;*/
 
 				scene = new THREE.Scene();
 
@@ -367,24 +476,14 @@ function addPyramid()
 				scene.add( plane );
 				
 				ground = new THREE.Mesh( new THREE.PlaneGeometry( 5000, 5000 ), new THREE.MeshLambertMaterial( { color: 0xff0000} ) );
-				ground.position.y = -455
+				ground.position.y = -100;
 				ground.type = "PLANE";
 				ground.rotation.set(-Math.PI/2, Math.PI/2000, Math.PI); 
 				ground.castShadow = true;
 				ground.receiveShadow = true;
 				scene.add(ground);
 				
-				var plane2 = new Shape;
-				plane2.plane = [-1,0,0,455];
-				plane2.diffuse = [0.8,0.8,0.8];
-				plane2.specular = [1,1,1];
-				plane2.ambient = [0.3,0.3,0.3];
-				plane2.color = [255,1,1];
-				plane2.reflective = 1;
-				plane2.refractive = 0;
-				plane2.reflectivity = 1;
-				plane2.type = "PLANE";
-				objects.push(plane2);
+				
 
 
 				renderer = new THREE.WebGLRenderer( { antialias: true, canvas: glcanvas } );
@@ -465,17 +564,17 @@ function addPyramid()
 
 				if ( intersects.length > 0 ) {
 
-					controls.enabled = false;
+					//controls.enabled = false;
 
 					SELECTED = intersects[ 0 ].object;
 
-					var intersects = raycaster.intersectObject( plane );
+					/*var intersects = raycaster.intersectObject( plane );
 
 					if ( intersects.length > 0 ) {
 
 						offset.copy( intersects[ 0 ].point ).sub( plane.position );
 
-					}
+					}*/
 
 					glcanvas.style.cursor = 'move';
 
@@ -487,7 +586,7 @@ function addPyramid()
 
 				event.preventDefault();
 
-				controls.enabled = true;
+				//controls.enabled = true;
 
 				if ( INTERSECTED ) {
 
@@ -510,7 +609,7 @@ function addPyramid()
 
 			function render() {
 
-				controls.update();
+				//controls.update();
 
 				renderer.render( scene, camera );
 

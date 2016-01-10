@@ -9,11 +9,15 @@ var scalefac = 16384;
 var light;	
 var maxRecursions;
 var defaultColor;
+var camera;
 
 //iterate through each pixel to get the raytraced colour
 function RayTrace()
 {
-	r0 = [width/2,height/2,-500];
+	
+	r0 = [camera.position.x-(camera.direction.x*10),
+			camera.position.y-(camera.direction.y*10),
+			-(camera.position.z - (camera.direction.z*10) )];
 	var row = ""; 	
 	
 	for(var i = 0; i < height; i+=pixelWidth)
@@ -21,10 +25,108 @@ function RayTrace()
 		row += "ROW:"+i/pixelWidth+",";
 		for(var j = 0; j < width; j+=pixelWidth)
 		{
-			row += GetColor(r0,calculateDirection(i+pixelCenter,j+pixelCenter), 0) + ",";
+			row += GetColor(r0,calculateDirection(i-camera.corners.y+pixelCenter,
+			j-camera.corners.x+pixelCenter), -(camera.position.z)) + ",";
 		}
 	}
 	postMessage(row);
+}
+
+function checkForHit(vectorStart, vectorSlope, object)
+{	
+	var intersection = -1;
+	var point;
+	var normal;
+	var minDistance;
+	var obj;
+	var color = defaultColor; 
+	var reflection;
+	
+	for(var index = 0; index < objects.length; index++)
+	{		
+		if(objects[index].type === "SPHERE")
+		{		
+			var B = CalculateB(vectorStart, vectorSlope, objects[index].location);
+			var C = CalculateC(vectorStart, objects[index].location, objects[index].radius);
+			var temp = (Math.pow(B,2) - 4*C);
+			
+			if(temp >= 0)
+			{
+				var t = (-B - Math.sqrt(temp))/2;
+				if(t <= 0)	t = (-B + Math.sqrt(temp))/2;
+				if(t <= 0) continue;
+				
+				var distance = Distance(vectorStart, vectorSlope, t);
+				
+				if((!minDistance || distance < minDistance))
+				{
+					minDistance = distance;
+					obj = objects[index];
+				}				
+			}
+		}
+		else if(objects[index].type === "PLANE")
+		{
+			//check for plane intersection
+			var direction = objects[index].plane[0] * vectorSlope[0] +
+							objects[index].plane[1] * vectorSlope[1] +
+							objects[index].plane[2] * vectorSlope[2];
+							
+			if(direction < 0)
+			{
+				var d2 = objects[index].plane[0] * vectorStart[0] +
+							objects[index].plane[1] * vectorStart[1] +
+							objects[index].plane[2] * vectorStart[2];
+							
+				var t = -(d2+objects[index].plane[3])/direction;
+				if(t < 0) continue;
+				
+				var distance = Distance(vectorStart, vectorSlope, t);
+				
+				if((!minDistance || distance < minDistance))
+				{
+					minDistance = distance;
+					obj = objects[index];
+				}	
+			}
+		}
+		
+		else if(objects[index].type === "POLYGON")
+		{
+			var direction = objects[index].plane[0] * vectorSlope[0] +
+							objects[index].plane[1] * vectorSlope[1] +
+							objects[index].plane[2] * vectorSlope[2];
+							
+			if(direction < 0)
+			{
+				var d2 = objects[index].plane[0] * vectorStart[0] +
+							objects[index].plane[1] * vectorStart[1] +
+							objects[index].plane[2] * vectorStart[2];
+							
+				var t = -(d2+objects[index].plane[3])/direction;
+				if(t < 0) continue;
+				
+				var distance = Distance(vectorStart, vectorSlope, t);
+				var Hitpoint = [(vectorStart[0] + vectorSlope[0]*t), (vectorStart[1] + vectorSlope[1]*t), (vectorStart[2] + vectorSlope[2]*t)];
+				
+				var inside;
+				if(objects[index].point4)
+				{
+					inside = pointInside(objects[index].point1,objects[index].point2,objects[index].point3,Hitpoint) ||
+								pointInside(objects[index].point3,objects[index].point4,objects[index].point1,Hitpoint);
+				}else
+					inside = pointInside(objects[index].point1,objects[index].point2,objects[index].point3,Hitpoint);
+				
+				if((!minDistance || distance < minDistance) && inside)
+				{
+					minDistance = distance;
+					obj = objects[index];
+				}	
+			}			
+		}
+	}	
+	
+	return (obj === object);
 }
 
 
@@ -121,7 +223,15 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 				var distance = Distance(vectorStart, vectorSlope, t);
 				var Hitpoint = [(vectorStart[0] + vectorSlope[0]*t), (vectorStart[1] + vectorSlope[1]*t), (vectorStart[2] + vectorSlope[2]*t)];
 				
-				if((!minDistance || distance < minDistance) && pointInside(objects[index].point1,objects[index].point2,objects[index].point3,Hitpoint))
+				var inside;
+				if(objects[index].point4)
+				{
+					inside = pointInside(objects[index].point1,objects[index].point2,objects[index].point3,Hitpoint) ||
+								pointInside(objects[index].point3,objects[index].point4,objects[index].point1,Hitpoint);
+				}else
+					inside = pointInside(objects[index].point1,objects[index].point2,objects[index].point3,Hitpoint);
+				
+				if((!minDistance || distance < minDistance) && inside)
 				{
 					minDistance = distance;
 					obj = objects[index];
@@ -176,27 +286,23 @@ function calculateColor(object, normal, hitpoint, reflection)
 					
 	var v = [light.location[0]- hitpoint[0],
 						light.location[1]- hitpoint[1],
-						light.location[2]- hitpoint[2]];
+						light.location[2]- hitpoint[2]];				
+	
+	var li = light.lightI;
+	if(!checkForHit(light.location, [-v[0]/length(v),-v[1]/length(v),-v[2]/length(v)], object))
+	{
+		li = 0;
+	}
 	
 	var cosA = 	(dot(v,normal))/(length(v)*length(normal));
-	
-	var temp = (ambientVal[0] + light.lightI*object.diffuse[0]*cosA);
-	
 	var cosB = (dot(reflection,v))/(length(reflection)*length(v));
 	
-	return  [ 	cap((object.color[0]*(ambientVal[0] + light.lightI*(object.diffuse[0]*cosA + object.specular[0]*Math.pow(cosB, light.specularF))))),
-				cap(object.color[1]*(ambientVal[1] + light.lightI*(object.diffuse[1]*cosA + object.specular[1]*Math.pow(cosB, light.specularF) ))),
-				cap(object.color[2]*(ambientVal[2] + light.lightI*(object.diffuse[2]*cosA + object.specular[2]*Math.pow(cosB, light.specularF) ))) ];
+	return  [ 	(object.color[0]*(ambientVal[0] + li*(object.diffuse[0]*cosA + object.specular[0]*Math.pow(cosB, light.specularF)))),
+				(object.color[1]*(ambientVal[1] + li*(object.diffuse[1]*cosA + object.specular[1]*Math.pow(cosB, light.specularF) ))),
+				(object.color[2]*(ambientVal[2] + li*(object.diffuse[2]*cosA + object.specular[2]*Math.pow(cosB, light.specularF) ))) ];
 	
 }
 
-function cap(number)
-{
-	number = Math.round(number);
-	if(number > 255) return 255;
-	if(number < 0) return 0;
-	return number;
-}
 
 function dot(a,b)
 {
@@ -315,6 +421,7 @@ onmessage = function(e)
 	light = JSON.parse(e.data[4]);
 	maxRecursions = e.data[5];
 	defaultColor = e.data[6];
+	camera = JSON.parse(e.data[7]);
 	pixelCenter = pixelWidth/2;
 	RayTrace();
 }

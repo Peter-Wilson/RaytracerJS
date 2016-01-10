@@ -4,10 +4,10 @@
 	</head>
 	<body onload="start()">
 		<script src="js/three.min.js"></script>
-		<script src="js/TrackballControls.js"></script>
+		<!--<script src="js/TrackballControls.js"></script>-->
 		<script src="js/raytracer.js"></script>
 		<H1>Pete and Matt's Raytracer</H1>
-		<button id="startButton" class="raytrace" onclick="startFunction()">RayTrace</button>		
+		<!--<button id="startButton" class="raytrace" onclick="startFunction()">RayTrace</button>-->		
 		<button id="addSquare" onclick="addSquare()">Add Square</button>
 		<button id="addPyramid" onclick="addPyramid()">Add Pyramid</button>
 		<button id="addSphere" onclick="addSphere()">Add Sphere</button>
@@ -32,6 +32,9 @@
 			<div id="overlay" width="640" height="480" style="z-index:0;">
 				<img src="img/loader.gif" />
 			</div>
+		</div>
+		<div id="startButton" class="raytrace" height="150" width="640" style="background-color:#FF0000;" onclick="startFunction()">
+			RayTrace
 		</div>
 		<br />
 		<br />
