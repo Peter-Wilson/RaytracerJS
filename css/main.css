@@ -42,3 +42,21 @@ body {
     font-weight:bold;
     text-decoration:none;
 }
+
+.overlap {
+    position: absolute;
+    left: 0;
+	top: 0;
+}
+
+#overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+	height:480;
+	width:640;
+    background: #FFFFFF;
+    opacity: 0.8;
+    filter: alpha(opacity=80);
+}
+

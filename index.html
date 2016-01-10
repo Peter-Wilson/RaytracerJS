@@ -3,28 +3,37 @@
 		<link href="css/main.css" rel="stylesheet" type="text/css" />
 	</head>
 	<body onload="start()">
-		<div>
+		<script src="js/three.min.js"></script>
+		<script src="js/TrackballControls.js"></script>
 		<script src="js/raytracer.js"></script>
 		<H1>Pete and Matt's Raytracer</H1>
-		<button onclick="startWorker()">RayTrace</button>
+		<button id="startButton" class="raytrace" onclick="startFunction()">RayTrace</button>		
+		<button id="addSquare" onclick="addSquare()">Add Square</button>
+		<button id="addPyramid" onclick="addPyramid()">Add Pyramid</button>
+		<button id="addSphere" onclick="addSphere()">Add Sphere</button>
+		<!--<br /><br />
+		Options:
+		<br />
+		Light Location: <br />
+		Ambient Intensity: <br />
+		Light Intensity: <br />
+		Specular: <br />
+		Max number of recursions: <br />
+		Background Color: <br />
+		Pixel Width: <br />-->
 		<br /><br />
 		<div style="position:relative;" height="480" width="640">
-			<canvas id="glcanvas" width="640" height="480"
-					style="position:absolute;left:0;top:0;z-index:0;">
+			<canvas id="glcanvas" class="overlap" width="640" height="480" style="z-index:2;">
 				Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
 			</canvas>
-			<canvas id="canvas2d" width="640" height="480" 
-					style="position:absolute;left:0;top:0;z-index:1;">
+			<canvas id="canvas2d" class="overlap" width="640" height="480" style="z-index:1;">
 				Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
 			</canvas>
+			<div id="overlay" width="640" height="480" style="z-index:0;">
+				<img src="img/loader.gif" />
+			</div>
 		</div>
 		<br />
-		<textarea id="output" disabled="true" columns="500" rows="5">
-		</textarea>
 		<br />
-			<div class="round-button"><div class="round-button-circle"><a class="round-button">Sphere</a></div></div>
-			<div class="round-button"><div class="round-button-circle"><a class="round-button">Cube</a></div></div>
-			<div class="round-button"><div class="round-button-circle"><a class="round-button">Pyramid</a></div></div>
-		</div>
 	</body>
 </html>

@@ -1,17 +1,42 @@
-var gl; // A global variable for the WebGL context
-var objects;
+var gl; //the webGL canvas
+var objects; //the 2d canvas
 var w;
 var output;
 var context;
-var pixelWidth = 2;
+var pixelWidth = 1;
+var light = new Object();
+light.location = [0,0,0];	
+light.ambientI = 3;
+light.lightI = 0.8;
+light.specularF = 5;
+var maxRecursions = 2;
+var defaultColor = [0,0,0];
+var glcanvas;
+var canvas2d;
+var overlay;
+var height = 480;
+var width = 640;
+var camera, controls, scene, renderer;
+var shapes = [], plane;
+
+var offsets;
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2(),
+offset = new THREE.Vector3(),
+INTERSECTED, SELECTED;
 
 function start() {
-  var glcanvas = document.getElementById("glcanvas");
-  var canvas2d = document.getElementById("canvas2d");
+  glcanvas = document.getElementById("glcanvas");
+  canvas2d = document.getElementById("canvas2d");
+  overlay = document.getElementById("overlay");
   context = canvas2d.getContext("2d");
+  
+  offsets = glcanvas.getBoundingClientRect();
 
   // Initialize the GL context
   gl = initWebGL(glcanvas);
+  init();
+  animate();
   
   // Only continue if WebGL is available and working
   
@@ -41,15 +66,44 @@ function Shape(type, location, radius, ambient, diffuse, specular, color, reflec
 	this.refractiveVal = refractiveVal;
 }
 
+function Square(location, radius, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
+	this.type = "SPHERE";
+	this.location = location;
+	this.radius = radius;
+	this.diffuse = diffuse;
+	this.specular = specular;
+	this.ambient = ambient;
+	this.color = color;
+	this.reflective = reflective;
+	this.refractive = refractive;
+	this.reflectivity = reflectivity; //lower number means more reflective
+	this.refractiveVal = refractiveVal;
+}
+
+
+function Pyramid(location, radius, ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal) {
+	this.type = "SPHERE";
+	this.location = location;
+	this.radius = radius;
+	this.diffuse = diffuse;
+	this.specular = specular;
+	this.ambient = ambient;
+	this.color = color;
+	this.reflective = reflective;
+	this.refractive = refractive;
+	this.reflectivity = reflectivity; //lower number means more reflective
+	this.refractiveVal = refractiveVal;
+}
+
 function initWebGL(canvas) {
   gl = null;
   objects = [];
-  output = document.getElementById('output');
   try {
+	  
     // Try to grab the standard context. If it fails, fallback to experimental.
     gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 	//initialize the default objects
-	var sphere = new Shape("SPHERE",[250,250,100],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],0,0, 1,2.4);
+	/*var sphere = new Shape("SPHERE",[250,250,100],100,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],[1,255,1],0,0, 1,2.4);
 	var sphere2 = new Shape("SPHERE",[400,100,500],50,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,1, 0, 0);
 	var sphere3 = new Shape("SPHERE",[450,450,900],20,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1], [1,255,1],1,1, 0,0);
 	var plane = new Shape;
@@ -84,7 +138,7 @@ function initWebGL(canvas) {
 	objects.push(sphere2);
 	objects.push(sphere3);
 	objects.push(plane);
-	objects.push(triangle);
+	objects.push(triangle);*/
   }
   catch(e) {}
   
@@ -109,24 +163,84 @@ function generatePlane(point1, point2, point3)
 		(crossproduct[0]*(-point1[0])+crossproduct[1]*(-point1[1])+crossproduct[2]*(-point1[2]))];
 }
 
+function startFunction()
+{
+	var actionButton = document.getElementById('startButton');
+	if(actionButton.className === "raytrace")
+	{
+		actionButton.className = "Setup";
+		actionButton.innerHTML = "Set Environment";
+		overlay.style.zIndex = "3";
+		startWorker();
+	}
+	else
+	{
+		actionButton.className = "raytrace";
+		actionButton.innerHTML = "RayTrace";
+		canvas2d.style.zIndex = "1";
+		glcanvas.style.zIndex = "2";
+	}
+}
+
+function createObjectList(objects)
+{
+	for(var i = 0; i < shapes.length; i++)
+	{
+		if(shapes[i].type === "SPHERE")
+		{
+			var a = shapes[i];
+			var sphere = new Shape("SPHERE",[(height/2) + a.position.y,(width/2) + a.position.x,a.position.z],
+			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,0,0, 0,0);
+			objects.push(sphere);
+		}
+		if(shapes[i].type === "PLANE")
+		{
+			alert("plane");
+			var a = shapes[i]
+			var plane = new Shape;
+			plane.plane = [-1,0,,0,-i.y];
+			plane.diffuse = [0.8,0.8,0.8];
+			plane.specular = [1,1,1];
+			plane.ambient = [0.3,0.3,0.3];
+			plane.color = [255,1,1];
+			plane.reflective = 1;
+			plane.refractive = 0;
+			plane.reflectivity = 1;
+			plane.type = "PLANE";
+			objects.push(plane);
+		}
+	}
+	
+}
+
 function startWorker() {
 	if(typeof(Worker) !== "undefined") {
 		if(typeof(w) == "undefined") {
 			w = new Worker("js/generate_image.js");
 			w.postMessage = w.webkitPostMessage || w.postMessage;
-			
-			w.postMessage([JSON.stringify(objects),480,640,pixelWidth]);
+			createObjectList(objects);
+			w.postMessage([JSON.stringify(objects),height,width,pixelWidth, JSON.stringify(light), 
+							maxRecursions, defaultColor]);
 		}
 		w.onmessage = function(event) {
 			if(event.data.startsWith("ROW:")){
-				output.innerHTML += event.data;
-				var pixels = (event.data.substring(4)).split(',');
-				var x = pixels[0];
-				for(var j = 1; j < pixels.length-1; j+=3)
+				var rows = (event.data.split("ROW:"));
+				for(var i = 0; i < rows.length; i++)
 				{
-					context.fillStyle = "rgb("+pixels[j]+","+pixels[j+1]+","+pixels[j+2]+")";
-					context.fillRect(((j-1)/3)*pixelWidth, x*pixelWidth, pixelWidth, pixelWidth );
+					var pixels = rows[i].split(',');
+					var x = pixels[0];
+					for(var j = 1; j < pixels.length-1; j+=3)
+					{
+						context.fillStyle = "rgb("+pixels[j]+","+pixels[j+1]+","+pixels[j+2]+")";
+						context.fillRect(((j-1)/3)*pixelWidth, x*pixelWidth, pixelWidth, pixelWidth );
+					}	
 				}
+				
+				stopWorker();				
+				overlay.style.zIndex = "0";
+				canvas2d.style.zIndex = "2";
+				glcanvas.style.zIndex = "1";
+				
 			}
 			else
 				output.innerHTML += event.data;
@@ -141,3 +255,263 @@ function stopWorker() {
 	w = undefined;
 }
 
+function addSquare()
+{
+	var geometry = new THREE.BoxGeometry( 40, 40, 40 );
+	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+
+	object.position.x = 0;
+	object.position.y = 0;
+	object.position.z = 0;
+
+	object.scale.x = 2
+	object.scale.y = 2;
+	object.scale.z = 2;
+
+	object.castShadow = true;
+	object.receiveShadow = true;
+
+	scene.add( object );
+
+	shapes.push( object );
+}
+
+function addSphere()
+{
+	var geometry = new THREE.SphereGeometry( 50 );
+	var tempColor = [Math.random()*256, Math.random()*256,Math.random()*256];
+	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: rgb2hex(tempColor[0],tempColor[1],tempColor[2]) } ) );
+
+	object.position.x = 0;
+	object.position.y = 0;
+	object.position.z = 0;
+	
+	object.type = "SPHERE";
+	object.radius = 50;
+	
+	object.color = tempColor;
+	object.reflective = 0;
+	object.refractive = 1;
+	object.reflectivity = 0; //lower number means more reflective
+	object.refractiveVal = 2.4;
+
+	object.castShadow = true;
+	object.receiveShadow = true;
+
+	scene.add( object );
+	//objects.push( object );
+	shapes.push( object );
+}
+
+function rgb2hex(red, green, blue) {
+	var rgb = blue | (green << 8) | (red << 16);
+	return parseInt("0x"+(0x1000000 + rgb).toString(16).slice(1));
+}
+
+function addPyramid()
+{
+	var geometry = new THREE.CylinderGeometry( 1, 50, 80, 4 );
+	var cylinder = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff }  ));
+		
+	cylinder.position.x = 0;
+	cylinder.position.y = 0;
+	cylinder.position.z = 0;	
+		
+	cylinder.castShadow = true;
+	cylinder.receiveShadow = true;
+	
+	scene.add( cylinder );
+	shapes.push( cylinder );
+	
+}
+
+			
+
+			function init() {
+				camera = new THREE.PerspectiveCamera( 70, width / height, 1, 10000 );
+				camera.position.z = 500;
+
+				controls = new THREE.TrackballControls( camera );
+				controls.rotateSpeed = 1.0;
+				controls.zoomSpeed = 1.2;
+				controls.panSpeed = 0.8;
+				controls.noZoom = false;
+				controls.noPan = false;
+				controls.staticMoving = true;
+				controls.dynamicDampingFactor = 0.3;
+
+				scene = new THREE.Scene();
+
+				scene.add( new THREE.AmbientLight( 0x505050 ) );
+
+				var glLight = new THREE.SpotLight( 0xffffff, 1.5 );
+				glLight.position.set( 0, 500, 2000 );
+				glLight.castShadow = true;
+
+				glLight.shadowCameraNear = 200;
+				glLight.shadowCameraFar = camera.far;
+				glLight.shadowCameraFov = 50;
+
+				glLight.shadowBias = -0.00022;
+
+				glLight.shadowMapWidth = 2048;
+				glLight.shadowMapHeight = 2048;
+
+				scene.add( glLight );
+			
+
+				plane = new THREE.Mesh(
+					new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
+					new THREE.MeshBasicMaterial( { visible: false } )
+				);
+				scene.add( plane );
+				
+				ground = new THREE.Mesh( new THREE.PlaneGeometry( 5000, 5000 ), new THREE.MeshLambertMaterial( { color: 0xff0000} ) );
+				ground.position.y = -455
+				ground.type = "PLANE";
+				ground.rotation.set(-Math.PI/2, Math.PI/2000, Math.PI); 
+				ground.castShadow = true;
+				ground.receiveShadow = true;
+				scene.add(ground);
+				
+				var plane2 = new Shape;
+				plane2.plane = [-1,0,0,455];
+				plane2.diffuse = [0.8,0.8,0.8];
+				plane2.specular = [1,1,1];
+				plane2.ambient = [0.3,0.3,0.3];
+				plane2.color = [255,1,1];
+				plane2.reflective = 1;
+				plane2.refractive = 0;
+				plane2.reflectivity = 1;
+				plane2.type = "PLANE";
+				objects.push(plane2);
+
+
+				renderer = new THREE.WebGLRenderer( { antialias: true, canvas: glcanvas } );
+				renderer.setSize(700, 700);
+				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( width, height );
+				renderer.sortObjects = false;
+
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFShadowMap;
+
+				renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+				mouse.x = ( (event.clientX-offsets.left) / width ) * 2 - 1;
+				mouse.y = - ( (event.clientY-offsets.top) / height ) * 2 + 1;
+				
+				raycaster.setFromCamera( mouse, camera );
+
+				if ( SELECTED ) {
+
+					var intersects = raycaster.intersectObject( plane );
+
+					if ( intersects.length > 0 ) {
+
+						SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
+
+					}
+
+					return;
+
+				}
+
+				var intersects = raycaster.intersectObjects( shapes );
+
+				if ( intersects.length > 0 ) {
+
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+
+						if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+
+						plane.position.copy( INTERSECTED.position );
+						plane.lookAt( camera.position );
+
+					}
+
+					glcanvas.style.cursor = 'pointer';
+
+				} else {
+
+					if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+					INTERSECTED = null;
+
+					glcanvas.style.cursor = 'auto';
+
+				}
+
+			}
+
+			function onDocumentMouseDown( event ) {
+
+				event.preventDefault();
+
+				raycaster.setFromCamera( mouse, camera );
+
+				var intersects = raycaster.intersectObjects( shapes );
+
+				if ( intersects.length > 0 ) {
+
+					controls.enabled = false;
+
+					SELECTED = intersects[ 0 ].object;
+
+					var intersects = raycaster.intersectObject( plane );
+
+					if ( intersects.length > 0 ) {
+
+						offset.copy( intersects[ 0 ].point ).sub( plane.position );
+
+					}
+
+					glcanvas.style.cursor = 'move';
+
+				}
+
+			}
+
+			function onDocumentMouseUp( event ) {
+
+				event.preventDefault();
+
+				controls.enabled = true;
+
+				if ( INTERSECTED ) {
+
+					plane.position.copy( INTERSECTED.position );
+
+					SELECTED = null;
+
+				}
+
+				glcanvas.style.cursor = 'auto';
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+			function render() {
+
+				controls.update();
+
+				renderer.render( scene, camera );
+
+			}

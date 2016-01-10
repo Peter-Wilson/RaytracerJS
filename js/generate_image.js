@@ -2,36 +2,29 @@ var height;
 var width;
 var r0;
 var objects;
-var defaultColor = [0,0,0];
 var pixelWidth;
 var pixelCenter;
-var light = new Object();
-light.location = [0,0,0];	
-var ambientI = 3;
-var lightI = 0.8;
-var specularF = 5;
-var aLUT
-var LUTBuf; 
-var maxRecursions = 2;
 var TIRflag = -999.0;
 var scalefac = 16384;
+var light;	
+var maxRecursions;
+var defaultColor;
 
 //iterate through each pixel to get the raytraced colour
 function RayTrace()
 {
-	r0 = [width/2,height/2,-500];	
+	r0 = [width/2,height/2,-500];
+	var row = ""; 	
 	
 	for(var i = 0; i < height; i+=pixelWidth)
 	{
-		var row = "ROW:"+i/pixelWidth+",";
+		row += "ROW:"+i/pixelWidth+",";
 		for(var j = 0; j < width; j+=pixelWidth)
 		{
 			row += GetColor(r0,calculateDirection(i+pixelCenter,j+pixelCenter), 0) + ",";
 		}
-		postMessage(row);
 	}
-	
-	postMessage("done");
+	postMessage(row);
 }
 
 
@@ -177,9 +170,9 @@ function sameObject(a, b)
 
 function calculateColor(object, normal, hitpoint, reflection)
 {		
-	var ambientVal = [	ambientI*object.ambient[0],
-					ambientI*object.ambient[1],
-					ambientI*object.ambient[2]];
+	var ambientVal = [	light.ambientI*object.ambient[0],
+					light.ambientI*object.ambient[1],
+					light.ambientI*object.ambient[2]];
 					
 	var v = [light.location[0]- hitpoint[0],
 						light.location[1]- hitpoint[1],
@@ -187,13 +180,13 @@ function calculateColor(object, normal, hitpoint, reflection)
 	
 	var cosA = 	(dot(v,normal))/(length(v)*length(normal));
 	
-	var temp = (ambientVal[0] + lightI*object.diffuse[0]*cosA);
+	var temp = (ambientVal[0] + light.lightI*object.diffuse[0]*cosA);
 	
 	var cosB = (dot(reflection,v))/(length(reflection)*length(v));
 	
-	return  [ 	cap((object.color[0]*(ambientVal[0] + lightI*(object.diffuse[0]*cosA + object.specular[0]*Math.pow(cosB, specularF))))),
-				cap(object.color[1]*(ambientVal[1] + lightI*(object.diffuse[1]*cosA + object.specular[1]*Math.pow(cosB, specularF) ))),
-				cap(object.color[2]*(ambientVal[2] + lightI*(object.diffuse[2]*cosA + object.specular[2]*Math.pow(cosB, specularF) ))) ];
+	return  [ 	cap((object.color[0]*(ambientVal[0] + light.lightI*(object.diffuse[0]*cosA + object.specular[0]*Math.pow(cosB, light.specularF))))),
+				cap(object.color[1]*(ambientVal[1] + light.lightI*(object.diffuse[1]*cosA + object.specular[1]*Math.pow(cosB, light.specularF) ))),
+				cap(object.color[2]*(ambientVal[2] + light.lightI*(object.diffuse[2]*cosA + object.specular[2]*Math.pow(cosB, light.specularF) ))) ];
 	
 }
 
@@ -319,7 +312,9 @@ onmessage = function(e)
 	height = e.data[1];
 	width = e.data[2];
 	pixelWidth = e.data[3];
+	light = JSON.parse(e.data[4]);
+	maxRecursions = e.data[5];
+	defaultColor = e.data[6];
 	pixelCenter = pixelWidth/2;
-	postMessage("\nObjects:"+objects+"\nHeight:"+height+"\nWidth:"+width);
 	RayTrace();
 }
