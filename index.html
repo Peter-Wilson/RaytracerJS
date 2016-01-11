@@ -65,10 +65,12 @@
 															<option value="3">3</option>	
 														</select>
 				</tr><tr>
-					<td colspan='2'>Background Color:
+					<td colspan='2' style="border-bottom:thin solid black;">Background Color:
 						<input type="color" id="html5colorpicker" onchange="changeBackground(this.value)" 
 						value="#000000">
 					</td>
+				</tr><tr>
+					<td colspan='2'>Polygon Background:<input type="checkbox" id="polygon">
 				</tr>
 			</table>
 			</div>
@@ -135,7 +137,7 @@
 		<h2>Controls:</h2>
 		There are a number of controls that can allow you to specify exactly how you wish the scene to be set up:
 		<h3>Scene options:</h3>
-		Scene options allow you to set up the environment and allow you to denote the quality of the image you are looking for<br />
+		Scene options allow you to set up the environment and allow you to denote the quality of the image you are looking for<br /><br />
 		<b>Pixel Width (resolution)</b>: this denotes the size of each pixel in the 640x480 image. The larger the pixel width, the lower the 
 		resolution of the final image. Increasing this will increase the speed of the application <br />
 		<b>Light Location</b>: Here is where you can specify the coordinates of the light in the scene. You can note the x,y,z coordinates and the 
@@ -147,11 +149,12 @@
 		<b>Specular:</b> determines the range of the specular highlight. A low value gives a large specular highlight where a high value gives a very 
 		tight specular highlight<br />
 		<b>Max number of recursions:</b>This denotes how many reflections/refractions occur before the program stops calculating. Lowering this can 
-		speed up execution but a higher number of recursions will lead to a more realistic image <br />
+		speed up execution but a higher number of recursions will lead to a more realistic image (NOTE: you need to set it to at least 1 for reflections/refraction)<br />
 		<b>Background Color:</b>You can also edit the background color of the scene. This will appear both immediately in the WebGL scene but also in the
 		finished image <br />
+		<b>Polygon Background:</b>Sets up a line of green polygons to simulate trees. It also shows that the raytracer can handle polygons  <br />
 		<h3>Shape Options</h3>
-		The shape options allow you a shape and add it to the scene. Shapes can then be selected and dragged into the correct spot in the scene<br />
+		The shape options allow you a shape and add it to the scene. Shapes can then be selected and dragged into the correct spot in the scene<br /><br />
 		<b>Object Location:</b>This specifies where the image will be placed when it is added to the scene. Once on the scene it can then be dragged 
 		around but this make it easier to manipulate the z-index<br />
 		<b>Radius:</b>This specifies the radius of the sphere. The bigger the number, the bigger the sphere<br />
@@ -204,7 +207,9 @@
 		<H2>Resources</H2>
 		A couple javascript libraries were used to help create this website:<br />
 		<a href="http://archive.slidesjs.com/">SlidesJs</a> - is used for the carosel image selector at the bottom of the page to display screenshots<br />
-		<a href="http://threejs.org/">ThreeJS</a> - is a WebGL library that makes it easier to set up 3D scenes
+		<a href="http://threejs.org/">ThreeJS</a> - is a WebGL library that makes it easier to set up 3D scenes<br />
+		<a href="http://www.cosc.brocku.ca/Offerings/3P98/course/assignments/RayTracing.pdf">RayTracing PDF</a> - the PDF provided in class was the primary
+		resource for developing the raytracer
 		<br />
 		<div id="creators">
 		<H1>Creators</H1>

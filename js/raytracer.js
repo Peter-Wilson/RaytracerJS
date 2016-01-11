@@ -268,6 +268,30 @@ function createObjectList(objects)
 	plane2.reflectivity = 1;
 	plane2.type = "PLANE";
 	objects.push(plane2);
+	
+	if(document.getElementById('polygon').checked){
+		var diffuse = [0.8,0.8,0.8];
+		var specular = [1,1,1];
+		var ambient = [0.2,0.2,0.2];
+		var color = [1,255,1];
+		var reflective = 0;
+		var reflectivity = 0;
+		var refractive = 0;
+		var refractiveVal = 0;
+		var t1 = new Polygon([0,-250,-160],[100,-300,-150],[100,-200,-150], ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal);
+		var t2 = new Polygon([0,-150,-160],[100,-200,-150],[100,-100,-150], ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal);
+		var t3 = new Polygon([0,-50,-160],[100,-100,-150],[100,0,-150], ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal);
+		var t4 = new Polygon([0,50,-160],[100,0,-150],[100,100,-150], ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal);
+		var t5 = new Polygon([0,150,-160],[100,100,-150],[100,200,-150], ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal);
+		var t6 = new Polygon([0,250,-160],[100,200,-150],[100,300,-150], ambient, diffuse, specular, color, reflective, reflectivity, refractive, refractiveVal);
+		
+		objects.push(t1);
+		objects.push(t2);
+		objects.push(t3);
+		objects.push(t4);
+		objects.push(t5);
+		objects.push(t6);
+	}
 				
 	for(var i = 0; i < shapes.length; i++)
 	{
@@ -293,8 +317,9 @@ function createObjectList(objects)
 			plane.type = "PLANE";
 			objects.push(plane);
 		}
-		if(shapes[i].type === "SQUARE")		{
-			createSquarePolygons(shapes[i].position, shapes[i].width, shapes[i].color, objects);			
+		if(shapes[i].type === "POLYGON")		{
+			createSquarePolygons(shapes[i].position, shapes[i].width, shapes[i].color, objects,
+			shapes[i].reflection,shapes[i].reflectivity,shapes[i].refraction,shapes[i].refractitivty);			
 		}		
 		if(shapes[i].type === "PYRAMID"){			
 			createPyramidPolygons(shapes[i].position, shapes[i].height, shapes[i].width, shapes[i].color, objects);
@@ -304,33 +329,13 @@ function createObjectList(objects)
 }
 
 //add the polygons required to make a cube
-function createSquarePolygons(p,w,color,obj)
+function createSquarePolygons(p,w,color,obj,reflection, reflectivity, refraction,refractitivty)
 {
 	
-	var sideA = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],
-							[-((p.y)-(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],
-			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
-	var sideB = new Square([-((p.y)-(w/2)),(p.x-(w/2)),(p.z-(w/2))],[-((p.y)-(w/2)),(p.x-(w/2)),(p.z+(w/2))],
-							[-((p.y)-(w/2)),(p.x+(w/2)), (p.z+(w/2))],[-((p.y)-(w/2)),(p.x+(w/2)),(p.z-(w/2))],
-			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
-	var sideC = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],
+	var square = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],
 							[-((p.y)-(w/2)),(p.x-(w/2)),(p.z-(w/2))],[-((p.y)-(w/2)),(p.x+(w/2)),(p.z-(w/2))],
-			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
-	var sideD = new Square([-((p.y)+(w/2)),(p.x+(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],
-							[-((p.y)+(w/2)),(p.x-(w/2)),(p.z+(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],
-							[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
-	var sideE = new Square([-((p.y)+(w/2)),(p.x-(w/2)),(p.z-(w/2))],[-((p.y)+(w/2)),(p.x-(w/2)),(p.z+(w/2))],
-						[-((p.y)-(w/2)),(p.x-(w/2)),(p.z+(w/2))],[-((p.y)-(w/2)),(p.x-(w/2)),(p.z-(w/2))],
-			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
-	var sideF = new Square([-((p.y)+(w/2)),(p.x-(w/2)),(p.z+(w/2))],[-((p.y)+(w/2)),(p.x+(w/2)),(p.z+(w/2))],
-						[-((p.y)-(w/2)),(p.x+(w/2)),(p.z+(w/2))],[-((p.y)-(w/2)),(p.x-(w/2)),(p.z+(w/2))],
-			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,0,0, 0,0);
-	obj.push(sideA);
-	obj.push(sideB);
-	obj.push(sideC);
-	obj.push(sideD);
-	obj.push(sideE);
-	obj.push(sideF);
+			[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],color,reflection,reflectivity,refraction,refractitivty);
+	obj.push(square);
 }
 
 //add the polygons required to make a cube
@@ -409,28 +414,41 @@ function stopWorker() {
 
 function addSquare()
 {
-	var geometry = new THREE.BoxGeometry( 40, 40, 40 );
-	var tempColor = [Math.random()*256, Math.random()*256,Math.random()*256];
+	var squareWidth;
+	var rectShape = new THREE.Shape();
+	rectShape.moveTo(  document.getElementById('locationX').value, -document.getElementById('locationY').value);
+	rectShape.lineTo( 0, squareWidth*2 );
+	rectShape.lineTo( squareWidth*2, squareWidth*2 );
+	rectShape.lineTo( squareWidth*2, 0 );
+	rectShape.lineTo( 0, 0 );
+
+	var rectGeom = new THREE.ShapeGeometry( rectShape );
+	var c = document.getElementById('color').value;
+	var rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial( { color: c }  ) ) ;
 	
-	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: rgb2hex(tempColor[0],tempColor[1],tempColor[2])  } ) );
+	rectMesh.reflective = 0;
+	rectMesh.refractive = 0;
+	rectMesh.reflectivity = 0;
+	rectMesh.refractiveVal = 0;
+	
+	if(document.getElementById('reflective').checked){
+		rectMesh.reflective = 1;
+		rectMesh.reflectivity = parseFloat(document.getElementById('reflectivity').value);
+	}
+	else if(document.getElementById('refractive').checked){
+		rectMesh.refractive = 1;
+		rectMesh.refractiveVal = parseFloat(document.getElementById('refractivity').value);
+	}
+	rectMesh.type = "SQUARE";
+	rectMesh.radius = document.getElementById('radius').value;
+	
 
-	object.position.x = 0;
-	object.position.y = 0;
-	object.position.z = 0;
+	rectMesh.castShadow = true;
+	rectMesh.receiveShadow = true;
 
-	object.type = "SQUARE";
-	object.width = 80;
-	object.color = tempColor;
-	object.scale.x = 2
-	object.scale.y = 2;
-	object.scale.z = 2;
+	scene.add( rectMesh );
 
-	object.castShadow = true;
-	object.receiveShadow = true;
-
-	scene.add( object );
-
-	shapes.push( object );
+	shapes.push( rectMesh );
 }
 
 function addSphere()
