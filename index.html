@@ -4,7 +4,7 @@
 		<link rel="shortcut icon" href="img/raytracer_logo.jpg">
 		<link href="css/main.css" rel="stylesheet" type="text/css" />
 	</head>
-	<body onload="start()">
+	<body onload="start()" onresize="resize()">
 		<nav class="menu">
 		<div id="title">
 			<img src="img/raytracer_logo.jpg" height="50px" />  
@@ -22,10 +22,10 @@
 		<script src="js/raytracer.js"></script>
 		<div id="raytracer" style="padding-top:50px;height:480px; background-color:#9E9E9E; width:100%;"
 			onclick="window.scrollTo(0, 0);">
-			<div style="float:left;width:300px;">
-			<table>
+			<div id="sceneOptions" style="float:left;width:300px;padding-top:50px">
+			<table style="float:right;">
 				<tr>
-					<td colspan="2">Scene Options:</td>				
+					<td colspan="2"><H2>Scene Options:</H2></td>				
 				</tr><tr>
 					<td>Pixel Width:</td><td><select id="pixelWidth" onchange="pixelWidth=parseInt(this.value);">
 												<option default value="1">1</option>
@@ -33,10 +33,12 @@
 												<option value="4">4</option>	
 											</select></td></td>
 				</tr><tr>
-					<td>Light Location:</td><td>x=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 0)" /><br />
-												y=<input type="text" value="300" maxlength="4" size="1" onchange="onLightChange(this.value, 1)" /><br />
-												z=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 2)" /><br />
-											</td>
+					<td colspan='2'>Light Location:</td>
+				</tr><tr>	
+					<td>x=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 0)" />
+						y=<input type="text" value="300" maxlength="4" size="1" onchange="onLightChange(this.value, 1)" />
+						z=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 2)" />
+					</td>
 				</tr><tr>
 					<td colspan="2">Ambient Intensity:</td>				
 				</tr><tr>
@@ -77,55 +79,48 @@
 					<img src="img/loader.gif" />
 				</div>
 			</div>
-			<div style="float:left;width:200px;">
+			<div id="sphereOptions" style="float:right;width:100%;text-align:right;padding-top:50px">
 			<table>
 				<tr>
-					<td>Pixel Width:</td><td><input type="text" id="pwidth" value="1" maxlength="4" size="4"
-											onchange=""/></td>
+					<td colspan='2'><H2>Sphere Options:</H2></td>
+				</tr><tr colspan='2'>
+				 	<td>Light Location:</td>
 				</tr><tr>
-				 	<td>Light Location:</td><td>x=<input type="text" id="pwidth" value="1" maxlength="4" size="4" /><br />
-												y=<input type="text" id="pwidth" value="1" maxlength="4" size="4" /><br />
-												z=<input type="text" id="pwidth" value="1" maxlength="4" size="4" /><br />
-											</td>
+					<td>x=<input type="text" id="locationX" value="0" maxlength="4" size="1" />
+						y=<input type="text" id="locationY" value="0" maxlength="4" size="1" />
+						z=<input type="text" id="locationZ" value="0" maxlength="4" size="1" />
+					</td>
 				</tr><tr>
-					<td>Ambient Intensity:</td>				
+					<td>Radius:</td><td><input type="text" id="radius" value="50" maxlength="4" size="1"/></td>
 				</tr><tr>
-					<td colspan="2"><input type="range" id="myRange" value="1"></td>
+					<td>Reflective:</td><td><input type="checkbox" 
+					onchange="if(this.checked){document.getElementById('refractive').checked = false;}" id="reflective"></td>				
 				</tr><tr>
-					<td>Light Intensity: </td>
+					<td colspan="2">Reflectivity: (0 = mirror)</td>
 				</tr><tr>
-					<td colspan="2"><input type="range" id="myRange" value="1"></td>
+					<td colspan="2"><input type="range" id="reflectivity" value="3.0" min="0.0" max="5.0" step="0.5" 
+					onchange="document.getElementById('reflectiveOP').innerHTML = this.value;"><span id="reflectiveOP">3.0</span></td>
 				</tr><tr>
-					<td>Specular f: </td><td><input type="text" id="pwidth" value="1" maxlength="4" size="4" /></td>
+					<td>Refractive:</td><td><input type="checkbox" 
+					onchange="if(this.checked){document.getElementById('reflective').checked = false;}" id="refractive"></td>
 				</tr><tr>
-					<td>Max number of<br /> recursions:</td><td><select>
+					<td colspan="2">Refractivity (2.4 = diamond):</td>
 				</tr><tr>
-					<td>Background Color: </td><td>
-						<input type="color" id="html5colorpicker" onchange="clickColor(0, -1, -1, 5)" 
-						value="#000000">
+					<td colspan="2"><input type="range" id="refractivity" value="2.4" min="1.0" max="3.0" step="0.1"
+					onchange="document.getElementById('refractiveOP').innerHTML = this.value;"><span id="refractiveOP">2.4</span></td>
+				</tr><tr>
+					<td>Color: </td><td>
+						<input type="color" id="color" value="#42A5F5">
 					</td>
 				</tr>
+				<tr>
+					<td colspan='2'><button onclick="addSphere()">Add Sphere</button></td>
 			</table>
 			</div>
 		</div>
 		<div id="startButton" class="raytrace" onclick="startFunction()">
 			RayTrace
 		</div>
-		<br /><br />
-		Options:
-		<br />
-		
-		<br /><br />
-		<div style="background-color:#9E9E9E; margin:10px;">
-		<img src="img/sphere_icon.png" style="width:100px;" onclick="addSphere()" />
-		Color: 
-        <input type="color" id="html5colorpicker" onchange="clickColor(0, -1, -1, 5)" value="#ff0000">
-
-		</div>
-		<!--<button id="startButton" class="raytrace" onclick="startFunction()">RayTrace</button>		
-		<button id="addSquare" onclick="addSquare()">Add Square</button>
-		<button id="addPyramid" onclick="addPyramid()">Add Pyramid</button>
-		<button id="addSphere" >Add Sphere</button>-->
 		<br />
 		<div id="description">
 		<H1>Raytracer.js</H1>

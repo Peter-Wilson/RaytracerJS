@@ -26,7 +26,7 @@ function RayTrace()
 		for(var j = 0; j < width; j+=pixelWidth)
 		{
 			row += GetColor(r0,calculateDirection(i-camera.corners.y+pixelCenter,
-			j-camera.corners.x+pixelCenter), -(camera.position.z-200)) + ",";
+			j-camera.corners.x+pixelCenter), 0) + ",";
 		}
 	}
 	postMessage(row);
@@ -248,7 +248,7 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 	}	
 	
 	//set the reflective colour
-	if(obj && obj.reflective && (recursion+1) <= maxRecursions)
+	if(obj && obj.reflective==1 && (recursion+1) <= maxRecursions)
 	{
 		recursedColor = (GetColor(point, reflection, recursion+1, obj));
 		color = [	Math.round((obj.reflectivity*color[0] + recursedColor[0]) /(1+obj.reflectivity)),
@@ -258,7 +258,7 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 	}
 	
 	//set the refractive color
-	if(obj && obj.refractive && recursion+1 <= maxRecursions)
+	if(obj && obj.refractive==1 && recursion+1 <= maxRecursions)
 	{
 		var refraction = CalculateRefraction(vectorSlope, normal, (object)?object.refractiveVal:1, (obj.refractiveVal)?obj.refractiveVal:1);
 		refractedColor = (GetColor(point, refraction, recursion+1, obj));
@@ -297,9 +297,9 @@ function calculateColor(object, normal, hitpoint, reflection)
 	var cosA = 	(dot(v,normal))/(length(v)*length(normal));
 	var cosB = (dot(reflection,v))/(length(reflection)*length(v));
 	
-	return  [ 	(object.color[0]*(ambientVal[0] + li*(object.diffuse[0]*cosA + object.specular[0]*Math.pow(cosB, light.specularF)))),
-				(object.color[1]*(ambientVal[1] + li*(object.diffuse[1]*cosA + object.specular[1]*Math.pow(cosB, light.specularF) ))),
-				(object.color[2]*(ambientVal[2] + li*(object.diffuse[2]*cosA + object.specular[2]*Math.pow(cosB, light.specularF) ))) ];
+	return  [ 	Math.round(object.color[0]*(ambientVal[0] + li*(object.diffuse[0]*cosA + object.specular[0]*Math.pow(cosB, light.specularF)))),
+				Math.round(object.color[1]*(ambientVal[1] + li*(object.diffuse[1]*cosA + object.specular[1]*Math.pow(cosB, light.specularF) ))),
+				Math.round(object.color[2]*(ambientVal[2] + li*(object.diffuse[2]*cosA + object.specular[2]*Math.pow(cosB, light.specularF) ))) ];
 	
 }
 

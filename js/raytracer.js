@@ -9,7 +9,7 @@ light.location = [-300,-300,-300];
 light.ambientI = 3;
 light.lightI = 0.8;
 light.specularF = 5;
-var maxRecursions = 2;
+var maxRecursions = 0;
 var defaultColor = [0,0,0];
 var glcanvas;
 var canvas2d;
@@ -41,6 +41,8 @@ function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
 function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)}
 function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h}
 
+window.onresize = resize;
+
 function onLightChange(value, index)
 {
 	switch(index){
@@ -59,11 +61,19 @@ function onLightChange(value, index)
 	glLight.position.set( light.location[0], -light.location[1], -light.location[2] );
 }
 
+function resize()
+{
+	document.getElementById("sceneOptions").style.width = (window.innerWidth-640)/2;
+	document.getElementById("sphereOptions").style.width  = (window.innerWidth-640)/2-50;
+}
+
 function start() {
   glcanvas = document.getElementById("glcanvas");
   canvas2d = document.getElementById("canvas2d");
   overlay = document.getElementById("overlay");
   context = canvas2d.getContext("2d");
+  
+  resize();
   
   offsets = glcanvas.getBoundingClientRect();
 
@@ -205,6 +215,7 @@ function generatePlane(point1, point2, point3)
 function startFunction()
 {
 	var actionButton = document.getElementById('startButton');
+	if(overlay.style.zIndex == "3") return;
 	if(actionButton.className === "raytrace")
 	{
 		actionButton.className = "Setup";
@@ -240,8 +251,8 @@ function createObjectList(objects)
 		if(shapes[i].type === "SPHERE")
 		{
 			var a = shapes[i];
-			var sphere = new Shape("SPHERE",[ -a.position.y,a.position.x,a.position.z],
-			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,1,2, 0,0);
+			var sphere = new Shape("SPHERE",[ -a.position.y,a.position.x,-a.position.z],
+			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,a.reflective,a.reflectivity, a.refractive,a.refractiveVal);
 			objects.push(sphere);
 		}
 		if(shapes[i].type === "PLANE")
@@ -336,7 +347,6 @@ function startWorker() {
 			screenCamera = new Object();
 			screenCamera.position = camera.position;
 			screenCamera.direction = camera.getWorldDirection();
-			alert(maxRecursions);
 			screenCamera.corners = topCorners(screenCamera.position, camera, glcanvas);
 			w.postMessage([JSON.stringify(objects),height,width,pixelWidth, JSON.stringify(light), 
 							maxRecursions, defaultColor, JSON.stringify(screenCamera)]);
@@ -402,22 +412,36 @@ function addSquare()
 
 function addSphere()
 {
-	var geometry = new THREE.SphereGeometry( 50 );
-	var tempColor = [Math.random()*256, Math.random()*256,Math.random()*256];
-	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: rgb2hex(tempColor[0],tempColor[1],tempColor[2]) } ) );
+	var geometry = new THREE.SphereGeometry( parseInt(document.getElementById('radius').value) );
+	var c = document.getElementById('color').value;
+	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: c } ) );
 
-	object.position.x = 0;
-	object.position.y = 0;
-	object.position.z = 0;
+	object.position.x = document.getElementById('locationX').value;
+	object.position.y = -document.getElementById('locationY').value;
+	object.position.z = -document.getElementById('locationZ').value;
 	
 	object.type = "SPHERE";
-	object.radius = 50;
+	object.radius = document.getElementById('radius').value;
 	
-	object.color = tempColor;
+	object.color = [hexToR(c),hexToG(c),hexToB(c)];
 	object.reflective = 0;
-	object.refractive = 1;
-	object.reflectivity = 0; //lower number means more reflective
-	object.refractiveVal = 2.4;
+	object.refractive = 0;
+	object.reflectivity = 0;
+	object.refractiveVal = 0;
+	
+	if(document.getElementById('reflective').checked){
+		object.reflective = 1;
+		object.reflectivity = parseFloat(document.getElementById('reflectivity').value);
+	}
+	else if(document.getElementById('refractive').checked){
+		object.refractive = 1;
+		object.refractiveVal = parseFloat(document.getElementById('refractivity').value);
+	}
+		
+	//object.reflective = 0;
+	//object.refractive = 1;
+	//object.reflectivity = 0; //lower number means more reflective
+	//object.refractiveVal = 2.4;
 
 	object.castShadow = true;
 	object.receiveShadow = true;
