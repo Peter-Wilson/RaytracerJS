@@ -18,6 +18,7 @@ var height = 480;
 var width = 640;
 var camera, controls, scene, renderer;
 var shapes = [], plane;
+var glLight;
 
 var offsets;
 var raycaster = new THREE.Raycaster();
@@ -25,6 +26,38 @@ var mouse = new THREE.Vector2(),
 offset = new THREE.Vector3(),
 INTERSECTED, SELECTED;
 var screenCamera;
+
+function changeBackground(value)
+{
+	renderer.setClearColor( value );
+	temp = "#"+value;
+	defaultColor = [hexToR(value),hexToG(value),hexToB(value)];
+}
+
+
+
+function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)}
+function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
+function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)}
+function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h}
+
+function onLightChange(value, index)
+{
+	switch(index){
+		case 0:
+			light.location = [parseInt(value), light.location[1], light.location[2]];	
+			break;		
+		case 1:
+			light.location = [light.location[0], -parseInt(value), light.location[2]];
+			break;
+		case 2:
+			light.location = [light.location[0], light.location[1], parseInt(value)];
+			break;
+		default:
+			break;
+	}
+	glLight.position.set( light.location[0], -light.location[1], -light.location[2] );
+}
 
 function start() {
   glcanvas = document.getElementById("glcanvas");
@@ -303,8 +336,8 @@ function startWorker() {
 			screenCamera = new Object();
 			screenCamera.position = camera.position;
 			screenCamera.direction = camera.getWorldDirection();
+			alert(maxRecursions);
 			screenCamera.corners = topCorners(screenCamera.position, camera, glcanvas);
-			screenCamera.plane = 
 			w.postMessage([JSON.stringify(objects),height,width,pixelWidth, JSON.stringify(light), 
 							maxRecursions, defaultColor, JSON.stringify(screenCamera)]);
 		}
@@ -453,8 +486,8 @@ function topCorners(position, camera, canvas)
 
 				scene.add( new THREE.AmbientLight( 0x505050 ) );
 
-				var glLight = new THREE.SpotLight( 0xffffff, 1.5 );
-				glLight.position.set( 0, 500, 2000 );
+				glLight = new THREE.SpotLight( 0xffffff, 1.5 );
+				glLight.position.set( light.location[0], -light.location[1], -light.location[2] );
 				glLight.castShadow = true;
 
 				glLight.shadowCameraNear = 200;
@@ -488,7 +521,7 @@ function topCorners(position, camera, canvas)
 
 				renderer = new THREE.WebGLRenderer( { antialias: true, canvas: glcanvas } );
 				renderer.setSize(700, 700);
-				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setClearColor( 0x000000 );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( width, height );
 				renderer.sortObjects = false;

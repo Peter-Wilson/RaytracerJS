@@ -1,42 +1,141 @@
 <html>
 	<head>
+		<title>Raytracer.js</title>
+		<link rel="shortcut icon" href="img/raytracer_logo.jpg">
 		<link href="css/main.css" rel="stylesheet" type="text/css" />
 	</head>
 	<body onload="start()">
+		<nav class="menu">
+		<div id="title">
+			<img src="img/raytracer_logo.jpg" height="50px" />  
+			RAYTRACER.js
+		</div>
+		<ul>
+			<li><a href="#raytracer">RayTracer</a></li>
+			<li><a href="#description">Description</a></li>
+			<li><a href="#creators">Creators</a></li>
+			<li><a href="#screenshots">Screenshots</a></li>
+		  </ul>
+		</nav>
 		<script src="js/three.min.js"></script>
 		<!--<script src="js/TrackballControls.js"></script>-->
 		<script src="js/raytracer.js"></script>
-		<H1>Pete and Matt's Raytracer</H1>
-		<!--<button id="startButton" class="raytrace" onclick="startFunction()">RayTrace</button>-->		
-		<button id="addSquare" onclick="addSquare()">Add Square</button>
-		<button id="addPyramid" onclick="addPyramid()">Add Pyramid</button>
-		<button id="addSphere" onclick="addSphere()">Add Sphere</button>
-		<!--<br /><br />
-		Options:
-		<br />
-		Light Location: <br />
-		Ambient Intensity: <br />
-		Light Intensity: <br />
-		Specular: <br />
-		Max number of recursions: <br />
-		Background Color: <br />
-		Pixel Width: <br />-->
-		<br /><br />
-		<div style="position:relative;" height="480" width="640">
-			<canvas id="glcanvas" class="overlap" width="640" height="480" style="z-index:2;">
-				Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
-			</canvas>
-			<canvas id="canvas2d" class="overlap" width="640" height="480" style="z-index:1;">
-				Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
-			</canvas>
-			<div id="overlay" width="640" height="480" style="z-index:0;">
-				<img src="img/loader.gif" />
+		<div id="raytracer" style="padding-top:50px;height:480px; background-color:#9E9E9E; width:100%;"
+			onclick="window.scrollTo(0, 0);">
+			<div style="float:left;width:300px;">
+			<table>
+				<tr>
+					<td colspan="2">Scene Options:</td>				
+				</tr><tr>
+					<td>Pixel Width:</td><td><select id="pixelWidth" onchange="pixelWidth=parseInt(this.value);">
+												<option default value="1">1</option>
+												<option value="2">2</option>
+												<option value="4">4</option>	
+											</select></td></td>
+				</tr><tr>
+					<td>Light Location:</td><td>x=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 0)" /><br />
+												y=<input type="text" value="300" maxlength="4" size="1" onchange="onLightChange(this.value, 1)" /><br />
+												z=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 2)" /><br />
+											</td>
+				</tr><tr>
+					<td colspan="2">Ambient Intensity:</td>				
+				</tr><tr>
+					<td colspan="2"><input type="range" id="myRange" value="3" min="0.0" max="5.0" step="0.1"
+									onchange="light.ambientI = parseFloat(this.value);
+											  document.getElementById('ambientOP').innerHTML = this.value;"><span id="ambientOP">3</span></td>
+				</tr><tr>
+					<td colspan="2">Light Intensity: </td>
+				</tr><tr>
+					<td colspan="2"><input type="range" id="myRange" value="0.8" min="0.0" max="1.0" step="0.01"
+									onchange="light.lightI = parseFloat(this.value);
+											  document.getElementById('lightOP').innerHTML = this.value;"><span id="lightOP">0.8</span></td>
+				</tr><tr>
+					<td>Specular f: </td><td><input type="text" value="5" maxlength="3" size="1" onchange="light.specularF = parseInt(this.value)" /></td>
+				</tr><tr>
+					<td>Max number of recursions:</td><td><select onchange="maxRecursions=parseInt(this.value);">
+															<option value="0">0</option>
+															<option value="1">1</option>
+															<option selected="selected" value="2">2</option>
+															<option value="3">3</option>	
+														</select>
+				</tr><tr>
+					<td>Background Color: </td><td>
+						<input type="color" id="html5colorpicker" onchange="changeBackground(this.value)" 
+						value="#000000">
+					</td>
+				</tr>
+			</table>
+			</div>
+			<div style="position:relative;margin: auto;float:left;width:640px;" height="480" width="640">
+				<canvas id="glcanvas" class="overlap" width="640" height="480" style="z-index:2;">
+					Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
+				</canvas>
+				<canvas id="canvas2d" class="overlap" width="640" height="480" style="z-index:1;">
+					Your browser doesn't support the <code>&lt;canvas&gt;</code> element.
+				</canvas>
+				<div id="overlay" width="640" height="480" style="z-index:0;">
+					<img src="img/loader.gif" />
+				</div>
+			</div>
+			<div style="float:left;width:200px;">
+			<table>
+				<tr>
+					<td>Pixel Width:</td><td><input type="text" id="pwidth" value="1" maxlength="4" size="4"
+											onchange=""/></td>
+				</tr><tr>
+				 	<td>Light Location:</td><td>x=<input type="text" id="pwidth" value="1" maxlength="4" size="4" /><br />
+												y=<input type="text" id="pwidth" value="1" maxlength="4" size="4" /><br />
+												z=<input type="text" id="pwidth" value="1" maxlength="4" size="4" /><br />
+											</td>
+				</tr><tr>
+					<td>Ambient Intensity:</td>				
+				</tr><tr>
+					<td colspan="2"><input type="range" id="myRange" value="1"></td>
+				</tr><tr>
+					<td>Light Intensity: </td>
+				</tr><tr>
+					<td colspan="2"><input type="range" id="myRange" value="1"></td>
+				</tr><tr>
+					<td>Specular f: </td><td><input type="text" id="pwidth" value="1" maxlength="4" size="4" /></td>
+				</tr><tr>
+					<td>Max number of<br /> recursions:</td><td><select>
+				</tr><tr>
+					<td>Background Color: </td><td>
+						<input type="color" id="html5colorpicker" onchange="clickColor(0, -1, -1, 5)" 
+						value="#000000">
+					</td>
+				</tr>
+			</table>
 			</div>
 		</div>
-		<div id="startButton" class="raytrace" height="150" width="640" style="background-color:#FF0000;" onclick="startFunction()">
+		<div id="startButton" class="raytrace" onclick="startFunction()">
 			RayTrace
 		</div>
+		<br /><br />
+		Options:
 		<br />
+		
+		<br /><br />
+		<div style="background-color:#9E9E9E; margin:10px;">
+		<img src="img/sphere_icon.png" style="width:100px;" onclick="addSphere()" />
+		Color: 
+        <input type="color" id="html5colorpicker" onchange="clickColor(0, -1, -1, 5)" value="#ff0000">
+
+		</div>
+		<!--<button id="startButton" class="raytrace" onclick="startFunction()">RayTrace</button>		
+		<button id="addSquare" onclick="addSquare()">Add Square</button>
+		<button id="addPyramid" onclick="addPyramid()">Add Pyramid</button>
+		<button id="addSphere" >Add Sphere</button>-->
+		<br />
+		<div id="description">
+		<H1>Raytracer.js</H1>
+		</div>
+		<div id="creators">
+		<H1>Creators</H1>
+		</div>		
+		<div id="screenshots">
+		<H1>Screenshots</H1>
+		</div>
 		<br />
 	</body>
 </html>

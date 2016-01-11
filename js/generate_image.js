@@ -17,7 +17,7 @@ function RayTrace()
 	
 	r0 = [camera.position.x-(camera.direction.x*10),
 			camera.position.y-(camera.direction.y*10),
-			-(camera.position.z - (camera.direction.z*10) )];
+			-(camera.position.z - (camera.direction.z*100) )];
 	var row = ""; 	
 	
 	for(var i = 0; i < height; i+=pixelWidth)
@@ -26,7 +26,7 @@ function RayTrace()
 		for(var j = 0; j < width; j+=pixelWidth)
 		{
 			row += GetColor(r0,calculateDirection(i-camera.corners.y+pixelCenter,
-			j-camera.corners.x+pixelCenter), -(camera.position.z)) + ",";
+			j-camera.corners.x+pixelCenter), -(camera.position.z-200)) + ",";
 		}
 	}
 	postMessage(row);
@@ -248,7 +248,7 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 	}	
 	
 	//set the reflective colour
-	if(obj && obj.reflective && recursion+1 <= maxRecursions)
+	if(obj && obj.reflective && (recursion+1) <= maxRecursions)
 	{
 		recursedColor = (GetColor(point, reflection, recursion+1, obj));
 		color = [	Math.round((obj.reflectivity*color[0] + recursedColor[0]) /(1+obj.reflectivity)),
