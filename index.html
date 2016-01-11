@@ -18,16 +18,18 @@
 		  </ul>
 		</nav>
 		<script src="js/three.min.js"></script>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="js/jquery.slides.min.js"></script>
 		<!--<script src="js/TrackballControls.js"></script>-->
 		<script src="js/raytracer.js"></script>
 		<div id="raytracer" style="padding-top:50px;height:480px; background-color:#9E9E9E; width:100%;"
 			onclick="window.scrollTo(0, 0);">
-			<div id="sceneOptions" style="float:left;width:300px;padding-top:50px">
+			<div id="sceneOptions" style="float:left;width:300px;padding-top:50px;padding-right:20px;">
 			<table style="float:right;">
 				<tr>
 					<td colspan="2"><H2>Scene Options:</H2></td>				
 				</tr><tr>
-					<td>Pixel Width:</td><td><select id="pixelWidth" onchange="pixelWidth=parseInt(this.value);">
+					<td colspan='2' style="border-bottom:thin solid black;">Pixel Width:<select id="pixelWidth" onchange="pixelWidth=parseInt(this.value);">
 												<option default value="1">1</option>
 												<option value="2">2</option>
 												<option value="4">4</option>	
@@ -35,33 +37,35 @@
 				</tr><tr>
 					<td colspan='2'>Light Location:</td>
 				</tr><tr>	
-					<td>x=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 0)" />
+					<td style="border-bottom:thin solid black;">x=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 0)" />
 						y=<input type="text" value="300" maxlength="4" size="1" onchange="onLightChange(this.value, 1)" />
 						z=<input type="text" value="-300" maxlength="4" size="1" onchange="onLightChange(this.value, 2)" />
 					</td>
 				</tr><tr>
 					<td colspan="2">Ambient Intensity:</td>				
 				</tr><tr>
-					<td colspan="2"><input type="range" id="myRange" value="3" min="0.0" max="5.0" step="0.1"
+					<td colspan="2" style="border-bottom:thin solid black;">
+					<input type="range" id="myRange" value="3" min="0.0" max="5.0" step="0.1"
 									onchange="light.ambientI = parseFloat(this.value);
 											  document.getElementById('ambientOP').innerHTML = this.value;"><span id="ambientOP">3</span></td>
 				</tr><tr>
 					<td colspan="2">Light Intensity: </td>
 				</tr><tr>
-					<td colspan="2"><input type="range" id="myRange" value="0.8" min="0.0" max="1.0" step="0.01"
+					<td colspan="2" style="border-bottom:thin solid black;">
+					<input type="range" id="myRange" value="0.8" min="0.0" max="1.0" step="0.01"
 									onchange="light.lightI = parseFloat(this.value);
 											  document.getElementById('lightOP').innerHTML = this.value;"><span id="lightOP">0.8</span></td>
 				</tr><tr>
-					<td>Specular f: </td><td><input type="text" value="5" maxlength="3" size="1" onchange="light.specularF = parseInt(this.value)" /></td>
+					<td colspan='2' style="border-bottom:thin solid black;">Specular f: <input type="text" value="5" maxlength="3" size="1" onchange="light.specularF = parseInt(this.value)" /></td>
 				</tr><tr>
-					<td>Max number of recursions:</td><td><select onchange="maxRecursions=parseInt(this.value);">
-															<option value="0">0</option>
+					<td colspan="2" style="border-bottom:thin solid black;">Max number of<br /> recursions:&nbsp;&nbsp;&nbsp;<select onchange="maxRecursions=parseInt(this.value);">
+															<option selected="selected" value="0">0</option>
 															<option value="1">1</option>
-															<option selected="selected" value="2">2</option>
+															<option value="2">2</option>
 															<option value="3">3</option>	
 														</select>
 				</tr><tr>
-					<td>Background Color: </td><td>
+					<td colspan='2'>Background Color:
 						<input type="color" id="html5colorpicker" onchange="changeBackground(this.value)" 
 						value="#000000">
 					</td>
@@ -79,34 +83,35 @@
 					<img src="img/loader.gif" />
 				</div>
 			</div>
-			<div id="sphereOptions" style="float:right;width:100%;text-align:right;padding-top:50px">
+			<div id="sphereOptions" style="float:right;width:100%;text-align:right;padding-top:50px;">
 			<table>
 				<tr>
-					<td colspan='2'><H2>Sphere Options:</H2></td>
+					<td colspan='2'><H2>Shape Options:</H2></td>
 				</tr><tr colspan='2'>
-				 	<td>Light Location:</td>
+				 	<td>Object Location:</td>
 				</tr><tr>
-					<td>x=<input type="text" id="locationX" value="0" maxlength="4" size="1" />
+					<td colspan='2' style="border-bottom:thin solid black;">x=<input type="text" id="locationX" value="0" maxlength="4" size="1" />
 						y=<input type="text" id="locationY" value="0" maxlength="4" size="1" />
 						z=<input type="text" id="locationZ" value="0" maxlength="4" size="1" />
 					</td>
 				</tr><tr>
-					<td>Radius:</td><td><input type="text" id="radius" value="50" maxlength="4" size="1"/></td>
+					<td colspan='2' style="border-bottom:thin solid black;">Radius:<input type="text" id="radius" value="50" maxlength="4" size="1"/></td>
 				</tr><tr>
-					<td>Reflective:</td><td><input type="checkbox" 
+					<td colspan='2'>Reflective:<input type="checkbox" 
 					onchange="if(this.checked){document.getElementById('refractive').checked = false;}" id="reflective"></td>				
 				</tr><tr>
 					<td colspan="2">Reflectivity: (0 = mirror)</td>
 				</tr><tr>
-					<td colspan="2"><input type="range" id="reflectivity" value="3.0" min="0.0" max="5.0" step="0.5" 
+					<td colspan="2"  style="border-bottom:thin solid black;">
+					<input type="range" id="reflectivity" value="3.0" min="0.0" max="5.0" step="0.5" 
 					onchange="document.getElementById('reflectiveOP').innerHTML = this.value;"><span id="reflectiveOP">3.0</span></td>
 				</tr><tr>
-					<td>Refractive:</td><td><input type="checkbox" 
+					<td colspan='2'>Refractive:<input type="checkbox" 
 					onchange="if(this.checked){document.getElementById('reflective').checked = false;}" id="refractive"></td>
 				</tr><tr>
 					<td colspan="2">Refractivity (2.4 = diamond):</td>
 				</tr><tr>
-					<td colspan="2"><input type="range" id="refractivity" value="2.4" min="1.0" max="3.0" step="0.1"
+					<td colspan="2"  style="border-bottom:thin solid black;"><input type="range" id="refractivity" value="2.4" min="1.0" max="3.0" step="0.1"
 					onchange="document.getElementById('refractiveOP').innerHTML = this.value;"><span id="refractiveOP">2.4</span></td>
 				</tr><tr>
 					<td>Color: </td><td>
@@ -122,14 +127,108 @@
 			RayTrace
 		</div>
 		<br />
-		<div id="description">
+		<div id="description" style="text-align:left;width:800px;margin:auto;">
 		<H1>Raytracer.js</H1>
-		</div>
+		
+		Raytracer.js is an interactive raytracing tool that utilizes WebGL to allow users to construct their scene interactively and 
+		then immediately render their image. They have plenty of options for setting up their image and quickly get the resultant image 
+		in a format that they can save to their computer.<br />
+		<h2>Controls:</h2>
+		There are a number of controls that can allow you to specify exactly how you wish the scene to be set up:
+		<h3>Scene options:</h3>
+		Scene options allow you to set up the environment and allow you to denote the quality of the image you are looking for<br />
+		<b>Pixel Width (resolution)</b>: this denotes the size of each pixel in the 640x480 image. The larger the pixel width, the lower the 
+		resolution of the final image. Increasing this will increase the speed of the application <br />
+		<b>Light Location</b>: Here is where you can specify the coordinates of the light in the scene. You can note the x,y,z coordinates and the 
+		changes will show immediately in the WebGL scene as well as the raytraced image<br />
+		<b>Ambient Intensity:</b> this denotes the effect the ambient light has on the object. The greater the ambient light, the less the shadows 
+		appear<br />
+		<b>Light Intensity:</b> this denotes the effect the actual light has on the object. Both Diffuse and specular lighting depend on the intensity
+		of the light<br />
+		<b>Specular:</b> determines the range of the specular highlight. A low value gives a large specular highlight where a high value gives a very 
+		tight specular highlight<br />
+		<b>Max number of recursions:</b>This denotes how many reflections/refractions occur before the program stops calculating. Lowering this can 
+		speed up execution but a higher number of recursions will lead to a more realistic image <br />
+		<b>Background Color:</b>You can also edit the background color of the scene. This will appear both immediately in the WebGL scene but also in the
+		finished image <br />
+		<h3>Shape Options</h3>
+		The shape options allow you a shape and add it to the scene. Shapes can then be selected and dragged into the correct spot in the scene<br />
+		<b>Object Location:</b>This specifies where the image will be placed when it is added to the scene. Once on the scene it can then be dragged 
+		around but this make it easier to manipulate the z-index<br />
+		<b>Radius:</b>This specifies the radius of the sphere. The bigger the number, the bigger the sphere<br />
+		<b>Reflective:</b>Checking this off denotes the object is reflective (NOTE: an object can't be both reflective and refractive)<br />
+		<b>Reflectivity:</b>this denotes how much of an effect the current shapes color has on the final value. 0 means it takes all the colour from 
+		the reflected material. Higher numbers mean it has less of an impact<br />
+		<b>Refractive:</b> denotes that the shape is refractive (Note: an object can't be both refractive and reflective)<br />
+		<b>Refractivity:</b> determines the effect the shape has on the ray vector. The higher refractivity, the more the light bends around it. 2.4 is the refractivity 
+		of a diamond.
+		<b>Color:</b>The color allows you to change the color of the shape you are adding. You can edit this before you add the shape to the scene<br />
+		<b>Add Sphere:</b>This button will add a sphere with the established settings into the scene. again, the sphere can be dragged around the scene 
+		to put it in the desired location<br />
+		<h3>RayTrace</h3>
+		This button underneath the scene will start the raytracing functionality. A loading screen will appear as the image is being generated. Depending on 
+		the complexity of the scene it may take a couple seconds. Once it is completed, the image will appear and the RayTrace button will change to 
+		'Set Environment'. From here, you can save your image by right clicking on the image and selecting save as. This is the same process as saving any 
+		image from the internet. Selecting the 'Set Environment' button will take you back to the scene canvas where you are able to add new objects and customize 
+		the scene even further.<br /><br />
+		<H2>Implementation Details</H2>
+		To allow for the usability that comes with websites, we developed the Raytracer entirely in javascript. This allowed us to make it more interactive and 
+		give the users the control to customize their scenes and set things up the way they want to. This was done by setting up 2 HTML5 canvases. One uses WebGL 
+		with a 3D perspective that allows users to set up the scene, and the other uses HTML5 2D canvas to print the 2D image returned by the ray tracer. 
+		<H3>WebGL</H3>
+		The WebGL canvas uses ThreeJS (see resources) to build a 3D plane that you can manipulate. Changes to the settings appear in real-time on the 3D plane and 
+		allows you to very easily customize your image to your liking. Adding an object will have it immediately appear inside the plane. Once it is on the plane, 
+		you can select the image and move it around. This is done by capturing the mouse click event and then sending out a raycast to find the first object in the 
+		scene that it hits. That object will then be able to be moved around until the mouse is released, at which point the object will remain in the location it was 
+		dragged to. Everything from lighting and colors to resolution and number of reflections can be specified before hand. The raytracing doesn't begin until the 
+		user selects the 'RayTrace' button.
+		<H3>RayTrace</H3>
+		To ensure the raytracer doesn't halt the usability of the website, we utilized HTML WebWorkers for javascript multi-threading. The thread will go through the 
+		scene pixel by pixel and will return the final image to the UI thread at which point it will draw it onto the canvas. The raytracing is performed by sending 
+		a ray from the 'eye' through each pixel. If this ray hits an object, depending on the properties of the object, it will bounce off; bend; or return the color
+		of that object. From there, lighting is also computed by it's relation to the light. If the normal of the shape points directly into the light, it is noted 
+		as specular and is often the brightest part of the object. If the pixel is in the light radius of the light, it will be lit to a degree based on the angle, 
+		which is called diffuse. Finally, if the part of the shape is out of direct light, it is in the shadow and only the ambient light shows. Finally, shadows are 
+		calculated where if the object the ray bounces off does not have a direct vector to the light without hitting another object, it is considered a shadow and, 
+		again, only ambient light is shown. When the ray calculates the color for every pixel, the values of these pixels is returned to the UI thread for drawing
+		<H3>2D Canvas</H3>
+		Now that the image is returned to the UI thread, it can be drawn to the screen. If does this by individually drawing each pixel onto the 2D canvas. 
+		Depending on the size of the pixels (see resolution above) it will draw the pixels to the specification of the raytracer. This allows for the image to 
+		then be saved by right clicking the canvas and selecting 'save image as'. Once you are finished saving the image or if you decide you wish to go back and 
+		make some changes to the scene, you can do so by selecting the 'Set Environment' button underneath the canvas.
+		<H2>Future Additions</H2>
+		Due to the limited time alotted for this project, a number of features were planned but needed to be scrapped since they were not completed for the 
+		due date of the Project. These may be completed in the near future:<br />
+		- Camera Rotation and Zooming<br />
+		- Pre-made shapes (including cubes, pyramids, and basic polygonal objects)<br />
+		- Textures <br />
+		<H2>Resources</H2>
+		A couple javascript libraries were used to help create this website:<br />
+		<a href="http://archive.slidesjs.com/">SlidesJs</a> - is used for the carosel image selector at the bottom of the page to display screenshots<br />
+		<a href="http://threejs.org/">ThreeJS</a> - is a WebGL library that makes it easier to set up 3D scenes
+		<br />
 		<div id="creators">
 		<H1>Creators</H1>
+		<table width="100%" style="text-align:center;background-color:#F0F0F0; padding-top:20px; padding-bottom:20px">
+			<tr>
+				<td><img src="img/pete.png" width="250" height="315" title="Hi, I'm Pete" /></td>
+				<td><img src="img/matt.jpg" width="250" height="315" title="Hi, I'm Matt" /></td>
+			</tr>
+			<tr>
+				<td>Peter Wilson</td><td>Matt Peskett</td>
+			</tr>
+		</table>
 		</div>		
-		<div id="screenshots">
+		<div id="screenshots" style="margin:0px;">
 		<H1>Screenshots</H1>
+			<div class="container">
+				<div id="slides">
+				  <img src="img/bridge.png" alt="Photo by: Peter Wilson">
+				  <a href="#" class="slidesjs-previous slidesjs-navigation"><i class="icon-chevron-left icon-large"></i></a>
+				  <a href="#" class="slidesjs-next slidesjs-navigation"><i class="icon-chevron-right icon-large"></i></a>
+				</div>
+			  </div>
+        </div>
 		</div>
 		<br />
 	</body>

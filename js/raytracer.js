@@ -34,7 +34,30 @@ function changeBackground(value)
 	defaultColor = [hexToR(value),hexToG(value),hexToB(value)];
 }
 
+$('a').click(function(){
+    $('html, body').animate({
+        scrollTop: $( $.attr(this, 'href') ).offset().top-60
+    }, 600);
+    return false;
+  });
 
+$(function() {
+      $('#slides').slidesjs({
+        width: 940,
+        height: 528,
+        navigation: {
+          effect: "fade"
+        },
+        pagination: {
+          effect: "fade"
+        },
+        effect: {
+          fade: {
+            speed: 400
+          }
+        }
+      });
+    });
 
 function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)}
 function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
@@ -63,8 +86,8 @@ function onLightChange(value, index)
 
 function resize()
 {
-	document.getElementById("sceneOptions").style.width = (window.innerWidth-640)/2;
-	document.getElementById("sphereOptions").style.width  = (window.innerWidth-640)/2-50;
+	document.getElementById("sceneOptions").style.width = (window.innerWidth-680)/2;
+	document.getElementById("sphereOptions").style.width  = (window.innerWidth-680)/2-30;
 }
 
 function start() {
