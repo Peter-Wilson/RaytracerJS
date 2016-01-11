@@ -124,6 +124,82 @@ function checkForHit(vectorStart, vectorSlope, object)
 				}	
 			}			
 		}
+		else if(objects[index].type === "CYLINDER")
+		{
+			var a = Math.pow(vectorSlope[0],2) + Math.pow(vectorSlope[2],2);
+			var b = 2 * vectorStart[0] * vectorSlope[0] + 2 * vectorStart[2] * vectorSlope[2];
+			var c = Math.pow(vectorStart[0],2) + Math.pow(vectorStart[2],2) - 1;
+			var t0;
+			var t1;
+			var normal
+
+			var value = b*b - 4*a*c;
+			if (value<0)
+				continue;
+				
+			var val2 = Math.sqrt(value);
+			t0 = (-b + val2) / (2 * a);
+			t1 = (-b - val2) / (2 * a);			
+			
+			//order the values
+			if (t0>t1){
+				var tmp = t0;
+				t0=t1;
+				t1=tmp;
+			}
+			var y0 = vectorStart[1] + t0 * vectorSlope[1];
+			var y1 = vectorStart[1] + t1 * vectorSlope[1];
+			
+			if (y0<-0)
+			{
+				if (y1<0)
+					continue;
+				else
+				{
+					// hit the cap
+					var th = t0 + (t1-t0) * (y0+1) / (y0-y1);
+					if (th<=0) continue;
+				
+					var distance = Distance(vectorStart, vectorSlope, th);
+					if((!minDistance || distance < minDistance) && inside)
+					{
+						minDistance = distance;
+						obj = objects[index];
+					}	
+				}
+			}
+			else if (y0>=0 && y0<=objects[index].radius)
+			{
+				// hit the cylinder bit
+				if (t0<=0) continue;
+					
+				var distance = Distance(vectorStart, vectorSlope, t0);
+					if((!minDistance || distance < minDistance) && inside)
+					{
+						minDistance = distance;
+						obj = objects[index];
+					}	
+			return true;
+			}
+			else if (y0>objects[index].radius)
+			{
+				if (y1>objects[index].radius)
+					continue;
+				else
+				{
+					// hit the cap
+					var th = t0 + (t1-t0) * (y0-1) / (y0-y1);
+					if (th<=0) continue;
+
+					var distance = Distance(vectorStart, vectorSlope, th);
+					if((!minDistance || distance < minDistance) && inside)
+					{
+						minDistance = distance;
+						obj = objects[index];
+					}	
+				}
+			}
+		}
 	}	
 	
 	return (obj === object);
@@ -244,6 +320,90 @@ function GetColor(vectorStart, vectorSlope, recursion, object)
 					color = calculateColor(objects[index], normal, point, reflection);
 				}	
 			}			
+		}
+		else if(objects[index].type === "CYLINDER")
+		{
+			var a = Math.pow(vectorSlope[0],2) + Math.pow(vectorSlope[2],2);
+			var b = 2 * vectorStart[0] * vectorSlope[0] + 2 * vectorStart[2] * vectorSlope[2];
+			var c = Math.pow(vectorStart[0],2) + Math.pow(vectorStart[2],2) - 1;
+			var t0;
+			var t1;
+			var tempnormal;
+			var tempt;
+
+			var value = b*b - 4*a*c;
+			if (value<0)
+				continue;
+				
+			var val2 = Math.sqrt(value);
+			t0 = (-b + val2) / (2 * a);
+			t1 = (-b - val2) / (2 * a);			
+			
+			//order the values
+			if (t0>t1){
+				var tmp = t0;
+				t0=t1;
+				t1=tmp;
+			}
+			var y0 = vectorStart[1] + t0 * vectorSlope[1];
+			var y1 = vectorStart[1] + t1 * vectorSlope[1];
+			
+			if (y0<0)
+			{
+				if (y1<0)
+					continue;
+				else
+				{
+					// hit the cap
+					var th = t0 + (t1-t0) * (y0+1) / (y0-y1);
+					if (th<=0) continue;
+				
+					tempt = th;
+					tempnormal = [0, -1, 0];
+				}
+			}
+			else if (y0>=0 && y0<=objects[index].radius)
+			{
+				// hit the cylinder bit
+				if (t0<=0) continue;
+					
+				tempt = t0;
+				tempHit = [(vectorStart[0] + vectorSlope[0]*tempt), (vectorStart[1] + vectorSlope[1]*tempt), (vectorStart[2] + vectorSlope[2]*tempt)];
+				tempnormal = [tempHit[0], 0, tempHit[2]];
+				var l = length(tempnormal);
+				tempnormal = [tempnormal[0]/l, 0, tempnormal[2]/l];
+			return true;
+			}
+			else if (y0>objects[index].radius)
+			{
+				if (y1>objects[index].radius)
+					continue;
+				else
+				{
+					// hit the cap
+					var th = t0 + (t1-t0) * (y0-1) / (y0-y1);
+					if (th<=0) continue;
+
+					tempt = th;
+					tempnormal = [0, 1, 0];
+				}
+			}
+						
+			if(tempt)
+			{
+				var distance = Distance(vectorStart, vectorSlope, tempt);
+				if((!minDistance || distance < minDistance))
+				{
+					tempt = t;
+					minDistance = distance;
+					obj = objects[index];
+					point = [(vectorStart[0] + vectorSlope[0]*t), (vectorStart[1] + vectorSlope[1]*t), (vectorStart[2] + vectorSlope[2]*t)];
+					normal = tempnormal;
+					
+					reflection = CalculateReflection(vectorSlope, normal);			
+					color = calculateColor(objects[index], normal, point, reflection);
+				}
+			}
 		}
 	}	
 	

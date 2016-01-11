@@ -302,6 +302,13 @@ function createObjectList(objects)
 			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,a.reflective,a.reflectivity, a.refractive,a.refractiveVal);
 			objects.push(sphere);
 		}
+		if(shapes[i].type === "CYLINDER")
+		{
+			var a = shapes[i];
+			var sphere = new Shape("CYLINDER",[ -a.position.y,a.position.x,-a.position.z],
+			a.radius,[0.2,0.2,0.2],[0.8,0.8,0.8],[1,1,1],a.color,a.reflective,a.reflectivity, a.refractive,a.refractiveVal);
+			objects.push(sphere);
+		}
 		if(shapes[i].type === "PLANE")
 		{
 			var a = shapes[i];
@@ -462,6 +469,47 @@ function addSphere()
 	object.position.z = -document.getElementById('locationZ').value;
 	
 	object.type = "SPHERE";
+	object.radius = document.getElementById('radius').value;
+	
+	object.color = [hexToR(c),hexToG(c),hexToB(c)];
+	object.reflective = 0;
+	object.refractive = 0;
+	object.reflectivity = 0;
+	object.refractiveVal = 0;
+	
+	if(document.getElementById('reflective').checked){
+		object.reflective = 1;
+		object.reflectivity = parseFloat(document.getElementById('reflectivity').value);
+	}
+	else if(document.getElementById('refractive').checked){
+		object.refractive = 1;
+		object.refractiveVal = parseFloat(document.getElementById('refractivity').value);
+	}
+		
+	//object.reflective = 0;
+	//object.refractive = 1;
+	//object.reflectivity = 0; //lower number means more reflective
+	//object.refractiveVal = 2.4;
+
+	object.castShadow = true;
+	object.receiveShadow = true;
+
+	scene.add( object );
+	//objects.push( object );
+	shapes.push( object );
+}
+
+function addCylinder()
+{
+	var geometry =  new THREE.CylinderGeometry( 5, 5, parseInt(document.getElementById('radius').value), 32 );
+	var c = document.getElementById('color').value;
+	var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: c } ) );
+
+	object.position.x = 0;
+	object.position.y = 0;
+	object.position.z = 0;
+	
+	object.type = "CYLINDER";
 	object.radius = document.getElementById('radius').value;
 	
 	object.color = [hexToR(c),hexToG(c),hexToB(c)];
